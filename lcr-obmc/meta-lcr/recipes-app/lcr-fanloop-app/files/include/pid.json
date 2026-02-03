@@ -1,0 +1,24 @@
+{
+    "ts": 1.0,
+    "linear": true,
+    "checkHysterWithSetpt": false,
+    "proportionalCoeff": 0.5,
+    "integralCoeff": 0.0,
+    "derivativeCoeff": 0.5,
+    "feedFwdOffset": 0.0,
+    "feedFwdGain": 0.0,
+    "integralLimit": {
+        "min": 0.0,
+        "max": 0.0
+    },
+    "outLim": {
+        "min": -100.0,
+        "max": 100.0
+    },
+    "slewNeg": 0.0,
+    "slewPos": 0.0,
+    "positiveHysteresis": 0.0,
+    "negativeHysteresis": 0.0,
+    "setpoint": 15.0
+
+}

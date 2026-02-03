@@ -1,0 +1,47 @@
+bootcmd=for target in ${boot_targets}; do run bootcmd_${target}; done
+boot_targets=nand net
+bootdelay=-2
+autoload=no
+
+loadaddr=0x200000
+bootimage_loadaddr=0x4000000
+bootscript_loadaddr=0x4000000
+devicetree_loadaddr=0x4080000
+kernel_loadaddr=0x4100000
+
+def_args=console=ttyPS0,115200 rw earlyprintk
+nand_args=setenv bootargs ${def_args} rootwait ubi.mtd=nand-rootfs rootfstype=ubifs root=ubi0:enzianbmc-zx5-rootfs
+net_args=setenv bootargs ${def_args} rootwait ubi.mtd=nand-rootfs rootfstype=ubifs root=ubi0:enzianbmc-zx5-rootfs
+
+qspi_fsbl_offset=0x0
+qspi_bootimage_offset=0x1000000
+
+mtdids=nand0=nand
+mtdparts=mtdparts=nand:32M(nand-kernel),512K(nand-devicetree),512K(nand-bootscript),-(nand-rootfs)
+
+kernel_size=0x2000000
+devicetree_size=0x80000
+bootscript_size=0x80000
+
+firmware_base=bmc
+firmware_version=enzianbmc-stable
+
+fsbl_file=boot-enzianbmc-zx5.bin
+bootimage_file=u-boot-enzianbmc-zx5.itb
+kernel_file=zImage-enzianbmc-zx5.bin
+devicetree_file=system-top.dtb
+bootscript_file=boot-enzianbmc-zx5.scr
+rootfs_file=obmc-phosphor-image-enzianbmc-zx5.ubifs
+
+bootcmd_nand=echo Booting from NAND...; zx_set_storage NAND; nand read ${bootscript_loadaddr} nand-bootscript ${bootscript_size} && source ${bootscript_loadaddr}
+bootcmd_net=echo Booting from TFTP...; zx_set_storage NAND; dhcp && tftpboot ${bootscript_loadaddr} ${firmware_base}/${ipaddr}.scr && source ${bootscript_loadaddr}
+
+update_fsbl=dhcp && tftpboot ${loadaddr} ${firmware_base}/${firmware_version}/${fsbl_file} && zx_set_storage QSPI && sf probe && sf update ${fileaddr} ${qspi_fsbl_offset} ${filesize}
+update_bootimage=dhcp && tftpboot ${loadaddr} ${firmware_base}/${firmware_version}/${bootimage_file} && zx_set_storage QSPI && sf probe && sf update ${fileaddr} ${qspi_bootimage_offset} ${filesize}
+
+update_bootscript=zx_set_storage NAND; dhcp && tftpboot ${bootscript_loadaddr} ${firmware_base}/${firmware_version}/${bootscript_file} && nand device 0 && nand erase.part nand-bootscript && nand write ${bootscript_loadaddr} nand-bootscript ${filesize}
+update_kernel=zx_set_storage NAND; dhcp && tftpboot ${kernel_loadaddr} ${firmware_base}/${firmware_version}/${kernel_file} && nand device 0 && nand erase.part nand-kernel && nand write ${fileaddr} nand-kernel ${filesize}
+update_devicetree=zx_set_storage NAND; dhcp && tftpboot ${devicetree_loadaddr} ${firmware_base}/${firmware_version}/${devicetree_file} && nand device 0 && nand erase.part nand-devicetree && nand write ${fileaddr} nand-devicetree ${filesize}
+update_rootfs=zx_set_storage NAND; dhcp && tftpboot ${loadaddr} ${firmware_base}/${firmware_version}/${rootfs_file} && ubi part nand-rootfs && ubi write ${fileaddr} enzianbmc-zx5-rootfs ${filesize}
+
+update_bmc=run update_fsbl && run update_bootimage && run update_bootscript && run update_kernel && run update_devicetree && run update_rootfs

@@ -1,0 +1,31 @@
+This directory contains various utilities to support the 
+management of Petalinux-based OBMC builds.
+
+Background:
+Goal of this project was to add OpenBMC layers to a 
+Petalinux BSP to produce a xilinx-based obmc. However,
+Petalinux workflow and tools, in combination with the
+various version mismatches between OpenBMC and Petalinux
+introduced a huge hurdle that we were unable to overcome
+before Phase 1 of the project closed.
+Therefore, the interim solution was to use the incomplete
+meta-lcr layer to produce an OpenBMC rootfs and continue
+to use the Petalinux BSP to produce the bootloader, device-tree
+and the kernel, then to manually combine the two projects
+to create a post-build image.
+
+After both projects are successfully built, these two files
+are to be copied to '<petalinux project>/images/linux/.'
+where they are to be used.
+
+Files:
+
+-import-obmc-files.sh
+import-obmc-files.sh is intended to automate copying the correct
+obmc rootfs files into the petalinux image directory.
+
+-lcr-image.its
+lcr-image.its is used by mkimage to produce an image.ub which
+contains the merge of petalinux bootloader, device tree, and kernel
+and the OBMC rootfs that was produced elsewhere.
+

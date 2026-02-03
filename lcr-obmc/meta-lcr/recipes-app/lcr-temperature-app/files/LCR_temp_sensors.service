@@ -1,0 +1,11 @@
+[Unit]
+Description=Temperature Driver Service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/tman
+Restart=always
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+# ignore vim swap files
+.*.sw*
+# failures from patch
+*.orig
+*.rej
+# backup files from some editors
+*~
+.cscope/
+
+# Meson
+/build*/
+/subprojects/*
+!/subprojects/*.wrap

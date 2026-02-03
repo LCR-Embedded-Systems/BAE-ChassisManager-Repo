@@ -1,0 +1,1 @@
+IMAGE_INSTALL:append = " kernel-module-mdio-netlink"

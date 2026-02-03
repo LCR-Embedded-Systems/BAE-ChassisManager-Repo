@@ -1,0 +1,40 @@
+From 70fb57115124072151419e51247bb4a50c876a56 Mon Sep 17 00:00:00 2001
+From: Daniel Schwyn <daniel.schwyn@inf.ethz.ch>
+Date: Wed, 7 Jun 2023 17:17:56 +0200
+Subject: [PATCH] Fix ZynqMPSoc DRAM ECC initialization
+
+---
+ arch/arm/mach-zynqmp/ecc_spl_init.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/arch/arm/mach-zynqmp/ecc_spl_init.c b/arch/arm/mach-zynqmp/ecc_spl_init.c
+index f547d8e3a5..86d9688647 100644
+--- a/arch/arm/mach-zynqmp/ecc_spl_init.c
++++ b/arch/arm/mach-zynqmp/ecc_spl_init.c
+@@ -45,16 +45,16 @@
+ static void ecc_zdma_restore(void)
+ {
+ 	/* Restore reset values for the DMA registers used */
+-	writel(ZDMA_CH_CTRL0, 0x00000080U);
+-	writel(ZDMA_CH_WR_ONLY_WORD0, 0x00000000U);
+-	writel(ZDMA_CH_WR_ONLY_WORD1, 0x00000000U);
+-	writel(ZDMA_CH_WR_ONLY_WORD2, 0x00000000U);
+-	writel(ZDMA_CH_WR_ONLY_WORD3, 0x00000000U);
+-	writel(ZDMA_CH_DST_DSCR_WORD0, 0x00000000U);
+-	writel(ZDMA_CH_DST_DSCR_WORD1, 0x00000000U);
+-	writel(ZDMA_CH_SRC_DSCR_WORD2, 0x00000000U);
+-	writel(ZDMA_CH_DST_DSCR_WORD2, 0x00000000U);
+-	writel(ZDMA_CH_CTRL0_TOTAL_BYTE_COUNT, 0x00000000U);
++	writel(0x00000080U, ZDMA_CH_CTRL0);
++	writel(0x00000000U, ZDMA_CH_WR_ONLY_WORD0);
++	writel(0x00000000U, ZDMA_CH_WR_ONLY_WORD1);
++	writel(0x00000000U, ZDMA_CH_WR_ONLY_WORD2);
++	writel(0x00000000U, ZDMA_CH_WR_ONLY_WORD3);
++	writel(0x00000000U, ZDMA_CH_DST_DSCR_WORD0);
++	writel(0x00000000U, ZDMA_CH_DST_DSCR_WORD1);
++	writel(0x00000000U, ZDMA_CH_SRC_DSCR_WORD2);
++	writel(0x00000000U, ZDMA_CH_DST_DSCR_WORD2);
++	writel(0x00000000U, ZDMA_CH_CTRL0_TOTAL_BYTE_COUNT);
+ }
+ 
+ static void ecc_dram_bank_init(u64 addr, u64 len)

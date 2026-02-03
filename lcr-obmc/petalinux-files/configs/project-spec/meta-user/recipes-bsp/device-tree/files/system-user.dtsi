@@ -1,0 +1,258 @@
+/include/ "system-conf.dtsi"
+/ {
+};
+&gem0 {
+    compatible = "xlnx,zynq-gem", "cdns,gem";
+    reg = <0xe000b000 0x1000>;
+    status = "okay";
+    interrupts = <0 22 4>;
+    clocks = <&clkc 30>, <&clkc 30>, <&clkc 13>;
+    clock-names = "pclk", "hclk", "tx_clk";
+    #address-cells = <1>;
+    #size-cells = <0>;
+    enet-reset = <&gpio0 11 0>;
+    phy-mode = "rgmii-id";
+    xlnx,ptp-enet-clock = <0x69f6bcb>;
+    phy-handle = <&ethernet_phy>;
+    ethernet_phy: ethernet-phy@0 {
+        reg = <0>;
+    };
+};
+
+&gem1 {
+    compatible = "xlnx,zynq-gem", "cdns,gem";
+    reg = <0xe000c000 0x1000>;
+    status = "okay";
+    interrupts = <0 45 4>;
+    clocks = <&clkc 31>, <&clkc 31>, <&clkc 14>;
+    clock-names = "pclk", "hclk", "tx_clk";
+    assigned-clocks = <&clkc 14>;
+    assigned-clock-rates = <125000000>;
+    phy-mode = "rgmii-id";
+    phy-handle = <&ethernet_phy1>;
+    mdio {
+        ethernet_phy1: ethernet-phy1@0 {
+            compatible = "marvell,88e1510";
+            reg = <0>;
+            marvell,reg-init = <18 20 0x0007 0x0002>,<18 20 0x8007 0x8002>,<1 16 0x0003 0x0001>,<1 26 0x4000 0x4000>,<1 0 0x8000 0x8000>;
+        };
+    };
+};
+
+&axi_iic_temp_sensor {
+    clock-frequency = <100000>;
+    compatible = "xlnx,axi-iic-2.1", "xlnx,xps-iic-2.00.a";
+    status = "okay";
+
+    temp_sensor_1: tmp100@48 {
+        compatible = "ti,tmp100";
+        reg = <0x48>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
+
+    temp_sensor_2: tmp100@4f {
+        compatible = "ti,tmp100";
+        reg = <0x4f>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
+};
+
+&axi_iic_temp_sensor2 {
+    clock-frequency = <100000>;
+    compatible = "xlnx,axi-iic-2.1", "xlnx,xps-iic-2.00.a";
+    status = "okay";
+
+    temp_sensor_3: tmp100@48 {
+        compatible = "ti,tmp100";
+        reg = <0x48>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
+
+    temp_sensor_4: tmp100@4f {
+        compatible = "ti,tmp100";
+        reg = <0x4f>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
+};
+
+&axi_iic_temp_sensor3 {
+    clock-frequency = <100000>;
+    compatible = "xlnx,axi-iic-2.1", "xlnx,xps-iic-2.00.a";
+    status = "okay";
+
+    temp_sensor_5: tmp100@48 {
+        compatible = "ti,tmp100";
+        reg = <0x48>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
+
+    temp_sensor_6: tmp100@4f {
+        compatible = "ti,tmp100";
+        reg = <0x4f>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
+};
+
+&axi_iic_temp_sensor4 {
+    clock-frequency = <100000>;
+    compatible = "xlnx,axi-iic-2.1", "xlnx,xps-iic-2.00.a";
+    status = "okay";
+
+    temp_sensor_7: tmp100@48 {
+        compatible = "ti,tmp100";
+        reg = <0x48>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
+
+    temp_sensor_8: tmp100@4f {
+        compatible = "ti,tmp100";
+        reg = <0x4f>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
+};
+
+&axi_iic_fan_ctrl {
+    clock-frequency = <100000>;
+    compatible = "xlnx,axi-iic-2.1", "xlnx,xps-iic-2.00.a";
+    status = "okay";
+
+    max31790@20 {
+        compatible = "maxim,max31790";
+        reg = <0x20>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
+};
+
+&axi_iic_si_osc {
+    clock-frequency = <100000>;
+    status = "okay";
+};
+
+&i2c0 {
+    status = "okay";
+    clock-frequency = <100000>;
+    ipmb@45 {
+        compatible = "ipmb-dev";
+        reg = <0x20>;
+        i2c-protocol;
+        bmc-addr = <0x20>;
+    };
+};
+
+&i2c1 {
+    status = "okay";
+    clock-frequency = <100000>;
+    ipmb@45 {
+        compatible = "ipmb-dev";
+        reg = <0x20>;
+        i2c-protocol;
+        bmc-addr = <0x20>;
+    };
+};
+
+
+
+&{/axi/spi@e000d000/flash@0} {
+    compatible = "micron,mt25qu02g", "jedec,spi-nor";
+    reg = <0x0>;
+    #address-cells = <1>;
+    #size-cells = <1>;
+    partitions {
+        compatible = "fixed-partitions";
+        #address-cells = <1>;
+        #size-cells = <1>;
+        partition@0 {
+            label = "qspi-boot";
+            reg = <0x0 0x800000>; /* 8 MB */
+        };
+        partition@1 {
+            label = "qspi-bootenv";
+            reg = <0x800000 0x40000>; /* 256 KB */
+        };
+        partition@2 {
+            label = "qspi-kernel";
+            reg = <0x840000 0x4000000>; /* 64 MB */
+        };
+        partition@3 {
+            label = "qspi-data";
+            reg = <0x4840000 0x8000000>; /* 128 MB */
+        };
+        partition@4 {
+            label = "qspi-logs";
+            reg = <0xC840000 0x2000000>; /* 32 MB */
+        };
+    };
+};
+
+&xadc_wiz_0 {
+    #io-channel-cells = <1>;
+    xlnx,channels {
+        channel@0 {
+            reg = <0>;
+        };
+        channel@1 {
+            reg = <1>;
+        };
+        channel@2 {
+            reg = <2>;
+        };
+        channel@3 {
+            reg = <3>;
+        };
+        channel@4 {
+            reg = <4>;
+        };
+        channel@5 {
+            reg = <5>;
+        };
+        channel@6 {
+            reg = <6>;
+        };
+        channel@7 {
+            reg = <7>;
+        };
+        channel@8 {
+            reg = <8>;
+        };
+    };
+};
+
+&adc {
+    status = "disabled";
+    #io-channel-cells = <1>;
+    xlnx,channels {
+        channel@0 {
+            reg = <0>;
+            xlnx,bipolar;
+        };
+        channel@1 {
+            reg = <1>;
+            xlnx,bipolar;
+        };
+        channel@2 {
+            reg = <2>;
+            xlnx,bipolar;
+        };
+        channel@3 {
+            reg = <3>;
+            xlnx,bipolar;
+        };
+        channel@4 {
+            reg = <4>;
+            xlnx,bipolar;
+        };
+        channel@5 {
+            reg = <5>;
+            xlnx,bipolar;
+        };
+    };
+};

@@ -1,0 +1,11 @@
+[Unit]
+Description=ADC Driver Service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/ADCman
+Restart=always
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,8 @@
+fans:
+ - inventory: /system/chassis/LCR_ChM/fan_1
+   cooling_zone: 0
+   cooling_profile: air
+   sensors:
+    - pwm1
+   target_interface: xyz.openbmc_project.Control.FanPwm
+   target_path: /xyz/openbmc_project/control/fanpwm/

@@ -1,0 +1,1247 @@
+From e33fc0641edd7fe707ffd98f327a6ed499e2ba82 Mon Sep 17 00:00:00 2001
+From: Mark Rush <mrush@mindspring.com>
+Date: Fri, 11 Apr 2025 14:55:54 +0000
+Subject: [PATCH] lcr-ipmid-mods
+
+---
+ include/ipmid/api-types.hpp |  52 +++
+ ipmid-new.cpp               |   5 +
+ ipmiwhitelist.cpp           |   5 +
+ meson.build                 |   2 +
+ vita4611/vita4611.cpp       | 167 +++++++++
+ vita4611/vita4611cm.cpp     | 650 ++++++++++++++++++++++++++++++++++++
+ vita4611/vita4611cm.hpp     | 259 ++++++++++++++
+ 7 files changed, 1140 insertions(+)
+ create mode 100644 ipmiwhitelist.cpp
+ create mode 100644 vita4611/vita4611.cpp
+ create mode 100644 vita4611/vita4611cm.cpp
+ create mode 100644 vita4611/vita4611cm.hpp
+
+diff --git a/include/ipmid/api-types.hpp b/include/ipmid/api-types.hpp
+index 518db03..f220e07 100644
+--- a/include/ipmid/api-types.hpp
++++ b/include/ipmid/api-types.hpp
+@@ -25,6 +25,14 @@ namespace ipmi
+ 
+ using Iana = oem::Number;
+ 
++
++enum VitaCmd : uint8_t
++{
++    cmdGetChassisInfo = 0x00,
++    cmdGetDeviceID    = 0x01,
++    cmdGetVSOCap      = 0x10,
++};
++
+ using Group = uint8_t;
+ constexpr Group groupPICMG = 0x00;
+ constexpr Group groupDMTG = 0x01;
+@@ -326,6 +334,33 @@ constexpr Cmd cmdSetDcmiConfigParameters = 0x12;
+ constexpr Cmd cmdGetDcmiConfigParameters = 0x13;
+ } // namespace dcmi
+ 
++namespace vso
++{
++constexpr Cmd cmdGetVSOCapabilities = 0x0;
++constexpr Cmd cmdGetChassisAddressTableInfo = 0x1;
++constexpr Cmd cmdGetChassisDeviceId = 0x2;
++constexpr Cmd cmdSetChassisDeviceId = 0x3;
++constexpr Cmd cmdFRUControl = 0x4;
++constexpr Cmd cmdGetFRULEDProperties = 0x5;
++constexpr Cmd cmdGetLEDColorCapabilities = 0x6;
++constexpr Cmd cmdGetFRULEDState = 0x8;
++constexpr Cmd cmdSetFRULEDState = 0x7;
++constexpr Cmd cmdSetIPMBState = 0x9;
++constexpr Cmd cmdGetFRUStatePolicyBits = 0xb;
++constexpr Cmd cmdSetFRUStatePolicyBits = 0xa;
++constexpr Cmd cmdSetFRUActivation = 0xc;
++constexpr Cmd cmdGetDeviceLocatorRecordID = 0xd;
++
++constexpr Cmd cmdGetChasissManagerIPMBAddress = 0x1b;
++constexpr Cmd cmdFRUControlCapabilities = 0x1e;
++constexpr Cmd cmdFRUInventoryDeviceLockControl = 0x1f;
++constexpr Cmd cmdFRUInventoryDeviceWrite = 0x20;
++constexpr Cmd cmdGetChasissManagerIPAddress = 0x21;
++constexpr Cmd cmdGetFRUAddressInfo = 0x40;
++
++}
++
++
+ // These are the command network functions, the response
+ // network functions are the function + 1. So to determine
+ // the proper network function which issued the command
+@@ -350,6 +385,23 @@ constexpr NetFn netFnOemSix = 0x3A;
+ constexpr NetFn netFnOemSeven = 0x3C;
+ constexpr NetFn netFnOemEight = 0x3E;
+ 
++namespace LCR
++{
++/*
++* netFnLCR
++* This is a OEM specific command
++* Can be sent by ipmitool raw
++* ipmitool raw 0x3A 0x1 <>
++*    sends the get device id command
++*    to the chassis manager
++*/
++constexpr uint8_t netFnLCR = 0x3A;
++constexpr uint8_t netFnLCRcmdpassthrough = 0x1;
++constexpr uint8_t netFnLCRcmddevicelist = 0x2;
++}
++
++
++
+ // IPMI commands for net functions. Callbacks using this should be careful to
+ // parse arguments to the sub-functions and can take advantage of the built-in
+ // message handling mechanism to create custom routing
+diff --git a/ipmid-new.cpp b/ipmid-new.cpp
+index f3d12c6..fd2f051 100644
+--- a/ipmid-new.cpp
++++ b/ipmid-new.cpp
+@@ -57,6 +57,9 @@ using namespace phosphor::logging;
+ static unsigned short selReservationID = 0xFFFF;
+ static bool selReservationValid = false;
+ 
++void init_vita4611();
++void shutdown_vita4611();
++
+ unsigned short reserveSel(void)
+ {
+     // IPMI spec, Reservation ID, the value simply increases against each
+@@ -883,6 +886,7 @@ int main(int argc, char* argv[])
+                                       "xyz.openbmc_project.Ipmi.Server");
+     iface->register_method("execute", ipmi::executionEntry);
+     iface->initialize();
++    init_vita4611();
+ 
+     io->run();
+ 
+@@ -893,6 +897,7 @@ int main(int argc, char* argv[])
+     ipmi::filterList.clear();
+     // unload the provider libraries
+     providers.clear();
++    shutdown_vita4611();
+ 
+     std::exit(exitCode);
+ }
+diff --git a/ipmiwhitelist.cpp b/ipmiwhitelist.cpp
+new file mode 100644
+index 0000000..021f13e
+--- /dev/null
++++ b/ipmiwhitelist.cpp
+@@ -0,0 +1,5 @@
++#include <ipmiwhitelist.hpp>
++
++const std::vector<netfncmd_pair> whitelist = {
++
++};
+diff --git a/meson.build b/meson.build
+index 2b82689..f5a99f9 100644
+--- a/meson.build
++++ b/meson.build
+@@ -257,6 +257,8 @@ libipmi20_dep = declare_dependency(
+ executable(
+   'ipmid',
+   'ipmid-new.cpp',
++  'vita4611/vita4611.cpp',
++  'vita4611/vita4611cm.cpp',
+   'host-cmd-manager.cpp',
+   'settings.cpp',
+   implicit_include_directories: false,
+diff --git a/vita4611/vita4611.cpp b/vita4611/vita4611.cpp
+new file mode 100644
+index 0000000..345cd98
+--- /dev/null
++++ b/vita4611/vita4611.cpp
+@@ -0,0 +1,167 @@
++#include "config.h"
++
++#include "user_channel/channel_layer.hpp"
++
++#include <ipmid/api.hpp>
++#include <ipmid/utils.hpp>
++#include <nlohmann/json.hpp>
++#include <phosphor-logging/elog-errors.hpp>
++#include <phosphor-logging/log.hpp>
++#include <sdbusplus/bus.hpp>
++#include <xyz/openbmc_project/Common/error.hpp>
++#include <xyz/openbmc_project/Network/EthernetInterface/server.hpp>
++#include "ipmid/api-types.hpp"
++    
++#include <bitset>
++#include <cmath>
++#include <fstream>
++#include <variant>
++#include <vector>
++#include <string>
++#include "vita4611/vita4611cm.hpp"
++#include <fstream>
++#include <ostream>
++
++using namespace phosphor::logging;
++
++//VITA4611CM vita4611_manager;
++std::ofstream dbgFile("lcr.ipmid.log");
++
++VITA4611_ChassisManager& getChassisManager()
++{
++    static VITA4611_ChassisManager instance;
++    return instance;
++}
++
++/*
++ * GetVSOCapabilities for the chassis manager
++ * For the actual devices we need to figure out
++ * how to send to the devices
++*/
++
++ipmi::RspType<std::vector<uint8_t>>
++GetVSOCapabilities(ipmi::Context::ptr&) {
++    auto respData = getChassisManager().getShMCVSOCaps();
++    auto ret = ipmi::responseSuccess(respData);
++    return ret;
++}
++
++/*
++* lcrcmdpassthrough
++* pass through functions for ipmitool when used
++* in raw mode with netfn = 0x3F and cmd = 1
++* Callers would run with
++*   ipmitool raw 0x3F 1 <ipmi address> <parameters>
++* 
++*/
++ipmi::RspType<std::vector<uint8_t>>
++lcrcmdpassthrough(ipmi::Context::ptr ctx,
++                                     const std::vector<uint8_t>& data)
++{
++    (void)ctx;
++    /* route to the chassis manager
++    *  The chassis manager will handle all the commands
++    */
++    return getChassisManager().execute_passthrough_cmd(data);
++}
++
++/*
++* lcrgetdevicelist
++* Return an array of bytes
++* First byte is the ipmi address of the bmc
++* all other bytes are ipmi addresses of devices
++* we have enumerated on ipmb-A
++* All devices enumerated are returned even if
++* they are not vita 46.11 devices
++*
++* By definition this function will return success
++*/
++ipmi::RspType<std::vector<uint8_t>>
++lcrgetdevicelist(ipmi::Context::ptr ctx,
++                                     const std::vector<uint8_t>& data)
++{
++    std::vector<uint8_t> ipmi_address_list;
++    (void)ctx;
++    (void)data;
++
++    ipmi_address_list.push_back(SHMC_IPMI_ADDRESS);
++
++    getChassisManager().get_device_list(ipmi_address_list);
++    return ipmi::responseSuccess(ipmi_address_list);
++}
++
++
++// initialize vita4611 state
++// This registers group handlers and
++// create the VITA 46.11 chassis manager
++// object
++//
++void init_vita4611()
++{
++    bool bRet;
++    log<level::INFO>("[ENTRY] VITA4611::init_vita4611");
++
++    registerGroupHandler(ipmi::prioOpenBmcBase, ipmi::groupVSO,
++                         ipmi::vso::cmdGetVSOCapabilities,
++                         ipmi::Privilege::User, GetVSOCapabilities);
++
++    /* register the handler for
++    *  caller to know all the devices on ipmb-a
++    *
++    */
++    bRet = ipmi::registerHandler(
++        ipmi::prioOpenBmcBase,
++        ipmi::LCR::netFnLCR,
++        ipmi::LCR::netFnLCRcmddevicelist,
++        ipmi::Privilege::User,
++        lcrgetdevicelist
++    );
++
++    if (bRet == false) {
++        dbgFile << "LCR:IPMI: Registering handler for " << (int)ipmi::LCR::netFnLCR << 
++            " " << (int)ipmi::LCR::netFnLCRcmddevicelist <<
++            "failed" << std::endl;
++    }
++    else {
++        dbgFile << "LCR:IPMI: Registering handler for " << (int)ipmi::LCR::netFnLCR << 
++            " " << (int)ipmi::LCR::netFnLCRcmddevicelist <<
++            "SUCCESS" << std::endl;        
++    }
++
++    /*
++    * Register our handler for our passthrough
++    * functionality. We could not get to
++    * intercept ipmitool -t <ipmi address>
++    * so we have to implement it this way
++    */
++    bRet = ipmi::registerHandler(
++        ipmi::prioOemBase,
++        ipmi::LCR::netFnLCR,
++        ipmi::LCR::netFnLCRcmdpassthrough,
++        ipmi::Privilege::User,
++        lcrcmdpassthrough);
++
++    if (bRet == false) {
++        dbgFile << "LCR:IPMI: Registering handler for " << (int)ipmi::LCR::netFnLCR << 
++            " " << (int)ipmi::LCR::netFnLCRcmdpassthrough <<
++            "failed" << std::endl;
++    }
++    else {
++        dbgFile << "LCR:IPMI: Registering handler for " << (int)ipmi::LCR::netFnLCR << 
++            " " << (int)ipmi::LCR::netFnLCRcmdpassthrough <<
++            "SUCCESS" << std::endl;        
++    }
++
++    dbgFile.flush();
++
++    log<level::INFO>("[EXIT] VITA4611::init_vita4611");
++}
++
++void shutdown_vita4611()
++{
++    log<level::INFO>("[ENTRY] shutdown_vita4611");
++    getChassisManager().sendShutdown();
++    log<level::INFO>("[EXIT] shutdown_vita4611");
++    dbgFile.flush();
++    /* destructor of dbgFile will close it*/
++}
+\ No newline at end of file
+diff --git a/vita4611/vita4611cm.cpp b/vita4611/vita4611cm.cpp
+new file mode 100644
+index 0000000..144dc0e
+--- /dev/null
++++ b/vita4611/vita4611cm.cpp
+@@ -0,0 +1,650 @@
++#include "vita4611cm.hpp"
++#include <sys/socket.h>
++#include <unistd.h>
++#include <fstream>
++#include <ostream>
++
++#include <stdio.h>
++#include <fcntl.h>
++#include <linux/i2c-dev.h>
++#include <sys/ioctl.h>
++#include <unistd.h>
++//testing testing testing once again testing
++extern std::ofstream dbgFile;
++
++typedef std::tuple<int, uint8_t, uint8_t, uint8_t, uint8_t, std::vector<uint8_t>> ipmb_response_return_type_t;
++
++/*
++* sendIPMBRequest
++* This function sends a IPMI request over i2c bus
++* using the d-bus method sendRequest provided by ipmbbridge
++* Channel :- Channel initialized by ipmbbridged based on its
++        JSON script
++
++* netfn , lun , cmd are copied in the IPMI request on the i2c bus
++* data (optional depends on above) is copied to IPMI request
++*
++* If the response fails (or timesout ) nullopt is returned. 
++* caller can optionally look at the cc value that is returned
++* as an output parameter
++*/
++std::optional<ipmb_response_return_type_t> sendIPMBRequest(
++    const uint8_t channel,
++    const uint8_t netfn, 
++    const uint8_t lun, 
++    const uint8_t cmd, 
++    std::vector<uint8_t> &data,
++    uint8_t *ipmi_response_cc /* out */
++)
++{
++    try
++    {
++        auto bus = sdbusplus::bus::new_default();
++
++        // Prepare the DBus method call
++        auto method = bus.new_method_call(
++            "xyz.openbmc_project.Ipmi.Channel.Ipmb",       // Service
++            "/xyz/openbmc_project/Ipmi/Channel/Ipmb",      // Object path
++            "org.openbmc.Ipmb",                            // Interface
++            "sendRequest");                                // Method
++
++        // Append parameters
++        method.append(channel, netfn, lun, cmd, data);
++
++        // Call the method synchronously
++        auto reply = bus.call(method);
++
++        if (reply.is_method_error())
++        {
++            dbgFile << "LCR:IPMID:Test() DBus method call failed (sendRequest)." << std::endl;
++            return std::nullopt;
++        }
++
++        std::tuple<int, uint8_t, uint8_t, uint8_t, uint8_t, std::vector<uint8_t>> result;
++        uint8_t cc;
++
++        reply.read(result);
++        cc = std::get<4>(result);
++
++        if (!cc) {
++            // success
++            *ipmi_response_cc = cc;
++            return result;
++        }
++        else {
++            *ipmi_response_cc = cc;
++            return std::nullopt;
++        }
++    }
++    catch (const std::exception& e)
++    {
++        dbgFile << "LCR::IPMID:GetDeviceID::Exception: " << e.what() << std::endl;
++        *ipmi_response_cc = 0xFF; /* TODO revisit this later */
++        return std::nullopt;
++    }
++
++    /* We should never come here since the try catch should catch everything */
++    *ipmi_response_cc = 0xFF;
++    return std::nullopt;
++}
++
++void
++VITA4611Device::queryDeviceId()
++{
++    std::optional<ipmb_response_return_type_t> ipmb_response;
++    std::vector<uint8_t> payload; // Get Device ID has no payload
++    uint8_t ipmi_response_cc;
++    ipmb_response = sendIPMBRequest(
++        0,
++        IPMI_GET_DEVICE_ID_NETFN,
++        0,
++        IPMI_GET_DEVICE_ID_CMD,
++        payload,
++        &ipmi_response_cc
++    );
++    if (ipmb_response.has_value()) {
++        ipmb_response_return_type_t resp;
++        resp = ipmb_response.value();
++
++        DeviceIDData = std::get<5>(resp);
++        validDeviceID = true;
++    }
++    else {
++        validDeviceID = false;
++    }
++}
++
++void
++VITA4611Device::enumerateFRUSensors(uint8_t fru)
++{
++    std::optional<ipmb_response_return_type_t> ipmb_response;
++    uint8_t ipmi_response_cc;
++    std::vector<uint8_t> payload = {0x03, (uint8_t) fru}; // VSO Group Extension Identifier
++    FruInfo fruinfo;
++    SensorRecord rec;
++    ipmb_response = 
++        sendIPMBRequest(
++            0,
++            NETFN_VITA4611,
++            0,
++            VITA4611_GET_MANDATORY_SENSOR_NUMBERS_CMD,
++            payload,
++            &ipmi_response_cc);
++    if (ipmb_response.has_value()) {
++        ipmb_response_return_type_t resp;
++        resp = ipmb_response.value();
++        auto resp_payload = std::get<5>(resp);
++
++        /* verify that the first byte is vso identifier
++        *  and the length is 9 bytes
++        */
++        if ((resp_payload[0] != VITA4611_VSO_IDENTIFIER))
++                return;
++
++        /*
++        * Refer to VITA 46.11 specification
++        * Table 10.1.3.26-1
++        */
++       fruinfo.deviceId = fru;
++       fruinfo.fruName = "VITA4611FRU";
++
++       rec.sensorNumber = resp_payload[1];
++       rec.sensorType = VITA4611FRUSensorType::FRUSensor_Type_State;
++       fruinfo.sensors.push_back(rec);
++
++       rec.sensorNumber = resp_payload[2];
++       rec.sensorType = VITA4611FRUSensorType::FRUSensor_Type_Health;
++       fruinfo.sensors.push_back(rec);
++
++       rec.sensorNumber = resp_payload[3];
++       rec.sensorType = VITA4611FRUSensorType::FRUSensor_Type_Voltage;
++       fruinfo.sensors.push_back(rec);
++
++       rec.sensorNumber = resp_payload[4];
++       rec.sensorType = VITA4611FRUSensorType::FRUSensor_Type_Temp;
++       fruinfo.sensors.push_back(rec);
++
++       rec.sensorNumber = resp_payload[5];
++       rec.sensorType = VITA4611FRUSensorType::FRUSensor_Type_PayloadTestResults;
++       fruinfo.sensors.push_back(rec);
++
++       rec.sensorNumber = resp_payload[6];
++       rec.sensorType = VITA4611FRUSensorType::FRUSensor_Type_PayloadTestStatus;
++       fruinfo.sensors.push_back(rec);
++
++       /* 7 is reserved */
++
++       rec.sensorNumber = resp_payload[8];
++       rec.sensorType = VITA4611FRUSensorType::FRUSensor_Type_PayloadModeSensor;
++       fruinfo.sensors.push_back(rec);
++    }
++}
++
++/*
++* discoverFRUs
++* Discover all the sensors implemented by each of the FRUs
++* implemented by the device
++*/
++void
++VITA4611Device::discoverFRUs()
++{
++    /* we already know all the FRUs. This is in VSO caps
++    *
++    */
++   uint8_t i;
++   for (i = 0; i < vsocaps->MaxFRUDeviceID; i++) {
++    enumerateFRUSensors(i);
++   }
++}
++
++
++
++void
++VITA4611Device::queryVsoCapabilities()
++{
++    std::optional<ipmb_response_return_type_t> ipmb_response;
++    uint8_t ipmi_response_cc;
++    dbgFile << "LCR:IPMID::ENTRY" << __FUNCTION__ << " " << std::endl;
++
++    std::vector<uint8_t> payload = {0x03}; // VSO Group Extension Identifier
++
++    ipmb_response = sendIPMBRequest(channel, NETFN_VITA4611, 0, VITA4611_GETVSOCAPS_CMD, payload, &ipmi_response_cc);
++    if (ipmb_response.has_value()) {
++        ipmb_response_return_type_t resp;
++        resp = ipmb_response.value();
++        isVITA4611Device = true;
++
++        vsocaps = new VSOCaps;
++        *vsocaps = *((struct VSOCaps *) std::get<5>(resp).data());
++        dbgFile << "LCR:IPMID. Device is a vita 46.11 device" << std::endl;
++    }
++    else {
++        dbgFile << "LCR:IPMID. Device is not a vita 46.11 device" << std::endl;
++        isVITA4611Device = false;
++    }
++}
++
++VITA4611Device::~VITA4611Device()
++{
++    if (vsocaps) {
++        delete vsocaps;
++    }
++}
++
++VITA4611Device::VITA4611Device(uint8_t channel, uint8_t ipmi_address)
++{
++    this->channel = channel;
++    this->ipmi_address = ipmi_address;
++
++    /*
++    * Query device id 
++    */
++    queryDeviceId();
++
++    if (validDeviceID == true) {
++        dbgFile <<"LCR:IPMID. Device implements device id cmd. Querying VSO Capabilities" << std::endl;
++        queryVsoCapabilities();
++
++        if (isVITA4611Device == true) {
++            /* discover and build the FRU map for this device */
++            dbgFile << "LCR:IPMID. Device is a vita 46.11 device" << std::endl;
++            discoverFRUs();
++        }
++    }
++}
++
++/*
++* Implementation of VITA4611_ChassisManager
++* This creates a thread that services requests
++* from ipmitool or over RMCP+ or other channels.
++*/
++
++VITA4611_ChassisManager::VITA4611_ChassisManager(): bus(sdbusplus::bus::new_default())
++{
++    dbgFile << "LCR:IPMI::Constructor" << std::endl;
++    /*
++    * enumerate i2c devices and join them to the map
++    * If they are also vita 46.11 devices then they also
++    * get initialized
++    */
++    enumerateI2CDevices();
++
++    /*
++    * Once we have enumerated the devices,
++    * see if they are vita 46.11 compliant devices
++    * To do this, send get device id and if that works
++    * then send a get vso capabilities command and cache the
++    * information.
++    */
++    worker = std::thread(&VITA4611_ChassisManager::processLoop, this);
++}
++
++VITA4611_ChassisManager::~VITA4611_ChassisManager()
++{
++    if (worker.joinable())
++    {
++        sendShutdown();
++        worker.join();
++    }
++
++    int fd = bus.get_fd();
++    shutdown(fd, SHUT_RD);
++}
++
++bool
++VITA4611_ChassisManager::verify_ipmi_address_is_valid(const uint8_t ipmi_address)
++{
++        /* we have a list of all the i2c devices on all i2c buses
++    * in our device map
++    * send get device id to each of them and then get vso capabilities
++    * and store these.
++    * When ipmitool command is sent for these commands, we will return
++    * these cached values. For everything else, we will send them out on
++    * the i2c bus
++    */
++   for (const auto& pair: i2cdeviceMap) {
++        const std::vector<I2CDeviceInfo>& vec = pair.second;
++
++        for (const auto &item: vec) {
++            if (item.devicei2caddress == (ipmi_address >> 1)) {
++                return true;
++            }
++        }
++    }
++
++    return false;
++}
++
++void
++VITA4611_ChassisManager::enumerateI2CDevices()
++{
++    int bus;
++    int file;
++
++    /*
++    * Only enumerate on bus 0 which is IPMB-A
++    * on the LCR board.
++    * 
++    * We will enable ipmb-b later if we decide that
++    * there is at least one device that is a tier3 device
++    */
++    for (bus = 0; bus < 1; bus++) {
++        std::string device = "/dev/i2c-" + std::to_string(bus);
++
++        file = open(device.c_str(), O_RDWR);
++        if (file < 0) {
++            continue;
++        }
++
++        /* bus is present now query devices on the bus */
++        /* walk through 2 buses connected to the PS of zc702 and discover
++        *  devices. At this point we do not care yet whether these are
++        *  IPMI or VITA 46.11 devices
++        */
++
++        for (uint8_t addr = 0x3; addr <= 0x77; addr++) {
++
++            if (ioctl(file, I2C_SLAVE, addr) ) {
++                continue;
++            }
++
++            /* There is a i2c device at addr.
++            *  We are the ShMC and our address is 0x20
++            *  so ignore that
++            */
++           if ( addr == SHMC_I2C_ADDRESS ) {
++                continue;
++           }
++
++           if (write(file, nullptr, 0) >= 0) {
++                /*
++                * add the device
++                */
++               dbgFile << 
++                "LCR::IPMID::Detected i2c device " <<
++                "on bus " << (int)bus << " at addr " << (int) addr << std::endl;
++               i2cdeviceMap[bus].push_back({bus, addr, bus, 0x20});
++               deviceMap[0] = new VITA4611Device(0, addr << 1);
++           }
++        }
++
++        close(file);
++    }
++}
++
++
++std::future<std::vector<uint8_t>> VITA4611_ChassisManager::submit(VITA4611Command req)
++{
++    dbgFile << "LCR:IPMI. Command submitted" << std::endl;
++    std::lock_guard<std::mutex> lock(queueMutex);
++    auto fut = req.promise.get_future();
++    requestQueue.push(std::move(req));
++    queueCond.notify_one();
++    dbgFile << "LCR:IPMI. Command completed" << std::endl;
++    return fut;
++}
++
++void VITA4611_ChassisManager::sendShutdown()
++{
++    VITA4611Command shutdownReq;
++    dbgFile << "Sending chassis manager thread command to shutdown" << std::endl;
++    shutdownReq.type = VITA4611CMCommandType::Shutdown;
++    std::lock_guard<std::mutex> lock(queueMutex);
++    requestQueue.push(std::move(shutdownReq));
++    queueCond.notify_one();
++}
++
++void VITA4611_ChassisManager::processLoop()
++{
++    dbgFile << "LCR:IPMI. worker thread started" << std::endl;
++    while (true)
++    {
++        VITA4611Command req;
++        {
++            std::unique_lock<std::mutex> lock(queueMutex);
++            queueCond.wait(lock, [this] {
++                return !requestQueue.empty();
++            });
++
++            req = std::move(requestQueue.front());
++            requestQueue.pop();
++        }
++
++        if (req.type == VITA4611CMCommandType::Shutdown)
++        {
++            dbgFile << "LCR:IPMI. Thread received shutdown command" << std::endl;
++            break;
++        }
++
++        dbgFile << "LCR:IPMI. Thread received a command to process" << std::endl;
++        std::vector<uint8_t> result = handleRequest(req);
++        req.promise.set_value(result);
++    }
++    dbgFile << "LCR:IPMI. worker thread is exiting" << std::endl;
++    dbgFile.flush();
++}
++
++std::vector<uint8_t> VITA4611_ChassisManager::handleRequest(const VITA4611Command& req)
++{
++    dbgFile << "Handling request for chassis manager" << std::endl;
++    (void)req;
++    dbgFile << "Done handling request for chassis manager" << std::endl;
++    return {0x00}; // Dummy success response
++}
++
++std::vector<uint8_t> VITA4611_ChassisManager::getShMCVSOCaps()
++{
++    /*
++    * We are chassis manager
++    * Tier 3
++    * These are fixed by the implementation
++    */
++   const uint8_t IPMCIdentifier = (1 << 4) | 2;
++   const uint8_t IPMBCapabilities = 1; /* implement both ipmb-a and ipmb-b */
++   const uint8_t VSOStandard = 0; /* vita 4611. */
++   const uint8_t VSOStandardRevision = 0;
++   const uint8_t MaxFRUDeviceId = 1;
++   const uint8_t IPMFRUDeviceId = 0;
++
++   std::vector<uint8_t> responseData = {
++       IPMCIdentifier,
++       IPMBCapabilities,
++       VSOStandard,
++       VSOStandardRevision,
++       MaxFRUDeviceId,
++       IPMFRUDeviceId
++   };
++
++   return responseData;
++}
++
++void VITA4611_ChassisManager::get_device_list(std::vector<uint8_t>& ipmi_address_list)
++{
++    ipmi_address_list.push_back(0x20 << 1); /* first address is our own bmc */
++    for (const auto& pair: i2cdeviceMap) {
++        const std::vector<I2CDeviceInfo>& vec = pair.second;
++
++        for (const auto &item: vec) {
++            /* ipmi address is always i2c address * 2
++            */
++            ipmi_address_list.push_back(item.devicei2caddress << 1);
++        }
++    }
++}
++
++/*
++* ipmitool command handler
++* ipmitool calls as follows
++    ipmitool raw 0x3A 1 <ipmi address> netfn lun cmd
++*
++* This command handler validates the ipmi address to ensure it is a
++* device present on the bus. If the device with the ipmi address is
++* not present, this function will return a failure
++
++* Then the response from the device is sent as is.
++* 
++*/
++ipmi::RspType<std::vector<uint8_t>>
++VITA4611_ChassisManager::execute_passthrough_cmd(const std::vector<uint8_t>& reqdata)
++{
++    uint8_t ipmi_address;
++    dbgFile << "LCR:IPMID[ENTRY] Pass through command" << std::endl;
++
++    if (reqdata.size() < 4) {
++        dbgFile << "LCR:IPMID. ERROR. Invalid number of parameters " << (int)(reqdata.size()) << std::endl; 
++        return ipmi::responseReqDataLenInvalid();
++    }
++
++    ipmi_address = reqdata[0];
++    uint8_t netFn = reqdata[1];
++    uint8_t lun = reqdata[2];
++    uint8_t cmd = reqdata[3];
++
++    /* if ipmi-address is 0x40
++    *  then it matches us and return the data
++    */
++    if (ipmi_address == SHMC_IPMI_ADDRESS) {
++        if ((netFn == NETFN_VITA4611) && (cmd ==VITA4611_GETVSOCAPS_CMD)) {
++            return ipmi::responseSuccess(getShMCVSOCaps());
++        }
++        else {
++            return ipmi::responseIllegalCommand();
++        }
++    }
++    else {
++        std::optional<ipmb_response_return_type_t> ipmb_response;
++
++        /*
++        * Verify the ipmi address is valid
++        */
++        if (false == verify_ipmi_address_is_valid(ipmi_address)) {
++            return ipmi::responseIllegalCommand();
++        }
++
++        if (NETFN_VITA4611 == netFn) {
++            if (cmd == VITA4611_GETVSOCAPS_CMD) {
++                std::vector<uint8_t> payload = {0x03}; // VSO Group Extension Identifier
++                uint8_t ipmi_response_cc;
++                VITA4611Device *p = deviceMap[0];
++                if (p) {
++                    /* payload should start with the VSO identifier
++                    *  followed by the user payload
++                    *  we know reqdata vector is at least 4 elements long
++                    */
++                    payload.insert(payload.end(), reqdata.begin() + 4, reqdata.end());
++                    ipmb_response = sendIPMBRequest(
++                        0,
++                        netFn,
++                        lun,
++                        cmd,
++                        payload,
++                        &ipmi_response_cc);
++                    if (ipmb_response.has_value()) {
++                        ipmb_response_return_type_t resp;
++                        resp = ipmb_response.value();
++                        return ipmi::responseSuccess(std::get<5>(resp));
++                    }
++                    else {
++                        return ipmi::responseCmdFailInitAgent();
++                    }
++                }
++                else {
++                    return ipmi::responseInvalidCommandOnLun();
++                }
++            }
++            else if (cmd == VITA4611_GET_MANDATORY_SENSOR_NUMBERS_CMD) {
++                std::vector<uint8_t> payload = {0x03}; // VSO Group Extension Identifier
++                uint8_t ipmi_response_cc;
++                VITA4611Device *p = deviceMap[0];
++                if (p) {
++                    /* payload should start with the VSO identifier
++                    *  followed by the user payload
++                    *  we know reqdata vector is at least 4 elements long
++                    */
++                    payload.insert(payload.end(), reqdata.begin() + 4, reqdata.end());
++                    ipmb_response = sendIPMBRequest(
++                        0,
++                        netFn,
++                        lun,
++                        cmd,
++                        payload,
++                        &ipmi_response_cc);
++                    if (ipmb_response.has_value()) {
++                        ipmb_response_return_type_t resp;
++                        resp = ipmb_response.value();
++                        return ipmi::responseSuccess(std::get<5>(resp));
++                    }
++                    else {
++                        return ipmi::response(ipmi_response_cc);
++                    }
++                }
++                else {
++                    return ipmi::responseInvalidCommandOnLun();
++                } 
++            }
++            else {
++                std::vector<uint8_t> payload = {0x03}; // VSO Group Extension Identifier
++                uint8_t ipmi_response_cc;
++                VITA4611Device *p = deviceMap[0];
++                if (p) {
++                    /* payload should start with the VSO identifier
++                    *  followed by the user payload
++                    *  we know reqdata vector is at least 4 elements long
++                    */
++                    payload.insert(payload.end(), reqdata.begin() + 4, reqdata.end());
++                    ipmb_response = sendIPMBRequest(
++                        0,
++                        netFn,
++                        lun,
++                        cmd,
++                        payload,
++                        &ipmi_response_cc);
++                    if (ipmb_response.has_value()) {
++                        ipmb_response_return_type_t resp;
++                        resp = ipmb_response.value();
++                        return ipmi::responseSuccess(std::get<5>(resp));
++                    }
++                    else {
++                        return ipmi::response(ipmi_response_cc);
++                    }
++                }
++                else {
++                    return ipmi::responseInvalidCommandOnLun();
++                }
++            }
++        }
++        else {
++            /* pass the netfn and lun and cmd unfiltered.
++            *  This is for normal ipmi commands and
++            *  responses
++            */
++            std::vector<uint8_t> payload;
++            uint8_t ipmi_response_cc;
++            VITA4611Device *p = deviceMap[0];
++            if (p) {
++                /* payload should start with the VSO identifier
++                *  followed by the user payload
++                *  we know reqdata vector is at least 4 elements long
++                */
++                payload.insert(payload.end(), reqdata.begin() + 4, reqdata.end());
++                ipmb_response = sendIPMBRequest(
++                    0,
++                    netFn,
++                    lun,
++                    cmd,
++                    payload,
++                    &ipmi_response_cc);
++                if (ipmb_response.has_value()) {
++                    ipmb_response_return_type_t resp;
++                    resp = ipmb_response.value();
++                    return ipmi::responseSuccess(std::get<5>(resp));
++                }
++                else {
++                    return ipmi::response(ipmi_response_cc);
++                }
++            }
++        }
++    }
++
++    return ipmi::responseUnspecifiedError();
++}
+\ No newline at end of file
+diff --git a/vita4611/vita4611cm.hpp b/vita4611/vita4611cm.hpp
+new file mode 100644
+index 0000000..db1225b
+--- /dev/null
++++ b/vita4611/vita4611cm.hpp
+@@ -0,0 +1,259 @@
++#pragma once
++
++#include <sdbusplus/bus.hpp>
++#include <sdbusplus/message.hpp>
++#include <sdbusplus/bus/match.hpp>
++
++#include <iostream>
++#include <iomanip>
++#include <vector>
++#include <map>
++#include <optional>
++#include <thread>
++#include <chrono>
++#include <atomic>
++#include <condition_variable>
++#include <mutex>
++#include <ipmid/api.hpp>
++#include <ipmid/utils.hpp>
++#include <nlohmann/json.hpp>
++#include <phosphor-logging/elog-errors.hpp>
++#include <phosphor-logging/log.hpp>
++#include <sdbusplus/bus.hpp>
++#include <xyz/openbmc_project/Common/error.hpp>
++#include <xyz/openbmc_project/Network/EthernetInterface/server.hpp>
++#include "ipmid/api-types.hpp"
++#include <queue>
++#include <vector>
++#include <future>
++
++#define SHMC_I2C_ADDRESS 0x20
++#define SHMC_IPMI_ADDRESS (SHMC_I2C_ADDRESS << 1)
++
++/*
++* Ipmitool commands. These are registered as
++* oem commands under netfn 0x3A
++* All of these go to the sbc (caller has to provide
++* i2c address)
++*/
++#define IPMITOOL_CMD_GET_DEVICE_ID 1
++#define IPMITOOL_CMD_SET_DEVICE_POWER 2
++#define IPMITOOL_CMD_GET_DEVICE_POWER_STATE 3
++#define IPMITOOL_CMD_QUERY_TEMPERATURE 4
++#define IPMITOOL_CMD_QUERY_POWER 5
++#define IPMITOOL_CMD_GET_FW_UPGRADE_STATUS 6
++#define IPMITOOL_CMD_QUERY_CARD_STATE 7
++#define IPMITOOL_CMD_GET_VSO_CAPS   8
++
++/*
++* Standard definitions per the specification
++*/
++#define VITA4611_VSO_IDENTIFIER 3
++
++#define IPMI_GET_DEVICE_ID_CMD 1
++#define VITA4611_GETVSOCAPS_CMD 0
++#define VITA4611_GET_CHASSIS_ID_CMD 2
++#define VITA4611_GET_FRU_LED_PROPS_CMD 5
++#define VITA4611_SET_FRU_LED_STATE_CMD 7
++#define VITA4611_GET_MANDATORY_SENSOR_NUMBERS_CMD 0x44
++
++#define IPMI_GET_DEVICE_ID_NETFN 6
++#define NETFN_VITA4611 0x2c
++
++/*
++# of bytes in the response for get fru led properties
++* command (successful)
++* See the VITA 46.11 specification 
++* 0 byte is 3
++* 1 byte is reserved
++* 2 byte is # of LED
++*/
++constexpr int GET_FRU_LED_RESPONSE_DATA_SIZE = 3;
++constexpr int GET_MANDATORY_SENSOR_NUMBERS_RESPONSE_SIZE = 9; /* including the vso id */
++
++struct VSOCaps
++{
++    uint8_t VSOIdentifier;
++    uint8_t IPMCIdentifier;
++    uint8_t IPMBCapabilities;
++    uint8_t VSOStandard;
++    uint8_t VSORevision;
++    uint8_t MaxFRUDeviceID;
++    uint8_t IPMCFRUDeviceID;
++};
++
++struct FRUSensorInfo
++{
++    uint8_t FRUStateSensorNumber;
++    uint8_t FRUHealthSensorNumber;
++    uint8_t FRUVoltageSensorNumber;
++
++    uint8_t FRUTempSensorNumber;
++    uint8_t PayloadTestResultsSensorNumber;
++    uint8_t PayloadTestStatusSensorNumber;
++    uint8_t Reserved;
++    uint8_t PayloadModeSensorNumber;
++};
++
++enum class FruState : uint8_t {
++    M0_IPMCInactive           = 0,
++    M1_FRUInactive            = 1,
++    // M2 / M3 not used in VITA 46.11
++    M4_FRUActive              = 4,
++    M5_FRUDeactivationRequest = 5,
++    M6_FRUDeactivationInProg  = 6,
++    M7_FRUCommLost            = 7,
++    UNKNOWN                   = 0xFF
++};
++
++enum class VITA4611FRUSensorType : uint8_t {
++    FRUSensor_Type_State = 1,
++    FRUSensor_Type_Health = 2,
++    FRUSensor_Type_Voltage = 3,
++    FRUSensor_Type_Temp = 4,
++    FRUSensor_Type_PayloadTestResults = 5,
++    FRUSensor_Type_PayloadTestStatus = 6,
++    FRUSensor_Type_PayloadModeSensor = 7,
++    UNKNOWN = 0xFF
++};
++
++// ---------------------------------------------------
++//  Minimal sensor record (type, number, reading, etc.)
++// ---------------------------------------------------
++struct SensorRecord
++{
++    uint8_t  sensorNumber  = 0;      // e.g. 0x20
++    VITA4611FRUSensorType  sensorType    = VITA4611FRUSensorType::UNKNOWN;      // e.g. Temperature=01h, Voltage=02h, etc.
++    uint8_t  reading       = 0;      // raw reading from Get Sensor Reading
++    bool     eventEnabled  = false;  // is event generation on for this sensor?
++};
++
++// ---------------------------------------------------
++//  FRU Info: Holds data about a single FRU instance
++// ---------------------------------------------------
++struct FruInfo
++{
++    uint8_t         deviceId     = 0;         // 0 for IFRU, 1..n for Subsidiary
++    FruState        state        = FruState::UNKNOWN;
++    std::string     fruName;                  // e.g. "Slot 3 RTM"
++
++    // Minimal sensor list; real code might store a full IPMI SDR
++    std::vector<SensorRecord> sensors;
++};
++
++/*
++VITA4611DeviceInfo
++Object that represents a vita4611 device
++we keep track of
++
++channel :- Bus for the device
++isVITA4611Device :- indicates if the device is a vita 46.11
++deviceIdResponse :- Data bytes of the get device id
++vsocaps :- If the device is a vita 46.11,
++  then this is valid and contains the vso capabilities
++  of the device
++
++  fru_led_info :- For each FRU, the number of LEDs
++  implemented by that FRU
++*/
++class VITA4611Device {
++
++private:
++    uint8_t channel;
++    uint8_t ipmi_address;
++    bool isVITA4611Device;
++    bool validDeviceID;
++    std::vector<uint8_t> DeviceIDData;
++    VSOCaps *vsocaps;
++
++    /*
++    * list of all FRUs supported by this device
++    * FRU #0 is required by specification
++    * Everything else is optional
++    */
++    std::vector<FruInfo> m_fruList;
++    ipmi::RspType<std::vector<uint8_t>> activateFRU(uint8_t fru);
++    ipmi::RspType<std::vector<uint8_t>> deactiveFRU(uint8_t fru);
++    ipmi::RspType<std::vector<uint8_t>> getFRUState(uint8_t fru);
++    ipmi::RspType<std::vector<uint8_t>> getSensorReading(uint8_t fru, uint8_t sensor);
++    ipmi::RspType<std::vector<uint8_t>> sendIPMBCommand(uint8_t lun, uint8_t cmd);
++
++    void queryDeviceId();
++    void queryVsoCapabilities();
++    void discoverFRUs();
++    void enumerateFRUSensors(uint8_t fru);
++
++public:
++    VITA4611Device(uint8_t channel, uint8_t ipmi_address);
++    ~VITA4611Device();
++};
++
++/*
++* I2CDeviceInfo represents a i2c device
++*/
++struct I2CDeviceInfo {
++    int i2cbus;
++    uint8_t devicei2caddress;
++    int channel;
++    uint8_t ShMCi2caddress;
++};
++
++enum class VITA4611CMCommandType
++{
++    IPMI,
++    Shutdown
++};
++
++struct VITA4611Command
++{
++    VITA4611CMCommandType type = VITA4611CMCommandType::IPMI;
++
++    std::promise<std::vector<uint8_t>> promise;
++
++    uint8_t netFn = 0;
++    uint8_t cmd = 0;
++    uint8_t lun = 0;
++    std::vector<uint8_t> payload;
++    uint8_t targetAddr = 0;
++};
++
++/*
++* VITA4611_ChassisManager
++* Models a vita 4611 chassis manager
++*/
++class VITA4611_ChassisManager
++{
++public:
++    VITA4611_ChassisManager();
++    ~VITA4611_ChassisManager();
++
++    std::future<std::vector<uint8_t>> submit(VITA4611Command req);
++    void sendShutdown();
++
++    void get_device_list(std::vector<uint8_t>& ipmi_address_list);
++    std::vector<uint8_t> getShMCVSOCaps();
++    ipmi::RspType<std::vector<uint8_t>> execute_passthrough_cmd(const std::vector<uint8_t>& reqdata);
++
++private:
++    void enumerateI2CDevices();
++    void processLoop();
++    std::vector<uint8_t> handleRequest(const VITA4611Command& req);
++
++    std::thread worker;
++    std::queue<VITA4611Command> requestQueue;
++    std::mutex queueMutex;
++    std::condition_variable queueCond;
++
++    /*
++    * i2cdeviceMap is the map of all devices discovered
++    * on a given bus
++    */
++   std::map<int, std::vector<I2CDeviceInfo>> i2cdeviceMap;
++    /*
++    * devicMap is a map of all devices that are compliant
++    * with vita46.11 discovered on the bus
++    */
++   std::map<uint8_t, VITA4611Device *> deviceMap;
++   bool verify_ipmi_address_is_valid(const uint8_t ipmi_address);
++   sdbusplus::bus::bus bus;
++};
+\ No newline at end of file

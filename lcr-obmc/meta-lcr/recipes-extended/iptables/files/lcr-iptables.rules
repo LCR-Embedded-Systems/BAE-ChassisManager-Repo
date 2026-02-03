@@ -1,0 +1,7 @@
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -p udp --dport 623 -j ACCEPT
+COMMIT
+

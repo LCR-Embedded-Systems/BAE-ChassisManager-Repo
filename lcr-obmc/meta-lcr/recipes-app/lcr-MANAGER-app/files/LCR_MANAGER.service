@@ -1,0 +1,10 @@
+[Unit]
+Description=BOOT SEQUENCE AND MANAGER
+After=systemd-journald.service
+
+[Service]
+ExecStart=/usr/bin/MANAGER
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

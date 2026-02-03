@@ -1,0 +1,17 @@
+#Default fan zone definition YAML - empty.
+#For format, see documentation in fan control code repository example yaml.
+manager_configuration:
+ power_on_delay: 20
+
+zone_configuration:
+- zone_conditions:
+  - name: air_cooled_chassis
+
+  zones:
+    - zone: 0
+      cooling_profiles:
+      - air
+      full_speed: 10500
+      default_floor: 6000
+      increase_delay: 5
+      decrease_interval: 30

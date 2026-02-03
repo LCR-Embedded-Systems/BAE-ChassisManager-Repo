@@ -1,0 +1,12 @@
+[Unit]
+Description=Fan Controller Service
+Requires=LCR_temp_sensors.service xyz.openbmc_project.fansensor.service
+After=network.target LCR_temp_sensors.service xyz.openbmc_project.fansensor.service phosphor-ipmi-host.service xyz.openbmc_project.EntityManager.service
+
+[Service]
+ExecStart=/usr/bin/lcr_fan_controller
+Restart=always
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

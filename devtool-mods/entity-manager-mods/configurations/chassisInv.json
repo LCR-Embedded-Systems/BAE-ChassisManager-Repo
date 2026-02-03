@@ -1,0 +1,41 @@
+{
+    "Exposes": [
+        {
+            "Address": "0x20",
+            "Bus": 2,
+            "Connector": {
+                "Name": "System Fan0_1",
+                "Pwm": 0,
+                "PwmName": "pwm1",
+                "Tachs": [
+                    0
+                ]
+            },
+            "Index": 0,
+            "MaxReading": 25000,
+            "Name": "fan_1",
+            "PowerState": "Always",
+            "Thresholds": [
+                {
+                    "Direction": "less than",
+                    "Name": "lower critical",
+                    "Severity": 1,
+                    "Value": 0
+                },
+                {
+                    "Direction": "greater than",
+                    "Name": "upper critical",
+                    "Severity": 1,
+                    "Value": 5000
+                }
+            ],
+            "Type": "I2CFan"
+        }
+    ],
+    "Name": "LCR_ChM",
+    "Type": "Chassis",
+    "Probe": "xyz.openbmc_project.Inventory.Item.I2CDevice({'Bus': 3, 'Address': 72})",
+    "xyz.openbmc_project.Inventory.Decorator.CoolingType": {
+        "AirCooled": true
+    }
+}

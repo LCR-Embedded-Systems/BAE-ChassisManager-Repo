@@ -1,0 +1,158 @@
+/**
+ * Copyright © 2017 IBM Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include "config.h"
+
+#include "manager.hpp"
+
+#include "dbus_paths.hpp"
+#include "sdbusplus.hpp"
+#include "utility.hpp"
+
+#include <unistd.h>
+
+#include <phosphor-logging/elog-errors.hpp>
+#include <phosphor-logging/elog.hpp>
+#include <phosphor-logging/log.hpp>
+#include <sdbusplus/bus.hpp>
+#include <xyz/openbmc_project/Common/error.hpp>
+
+#include <algorithm>
+#include <filesystem>
+
+namespace phosphor
+{
+namespace fan
+{
+namespace control
+{
+
+using namespace phosphor::logging;
+namespace fs = std::filesystem;
+
+constexpr auto SYSTEMD_SERVICE = "org.freedesktop.systemd1";
+constexpr auto SYSTEMD_OBJ_PATH = "/org/freedesktop/systemd1";
+constexpr auto SYSTEMD_INTERFACE = "org.freedesktop.systemd1.Manager";
+constexpr auto FAN_CONTROL_READY_TARGET = "obmc-fan-control-ready@0.target";
+
+/**
+ * Check if a condition is true. Conditions are used to determine
+ * which fan zone to use.
+ *
+ * @param[in] bus       - The D-Bus bus object
+ * @param[in] condition - The condition to check if true
+ * @return result       - True if the condition is true
+ */
+bool checkCondition(sdbusplus::bus_t& bus, const Condition& c)
+{
+    auto& type = std::get<conditionTypePos>(c);
+    auto& properties = std::get<conditionPropertyListPos>(c);
+
+    for (auto& p : properties)
+    {
+        auto value = std::get<propertyValuePos>(p);
+
+        // TODO openbmc/openbmc#1769: Support more types than just getProperty.
+        if (type.compare("getProperty") == 0)
+        {
+            log<level::INFO>(("checkCondition getProperty type. attempting to send to the dbus now with command: " + std::get<propertyPathPos>(p) + 
+            ", " + std::get<propertyInterfacePos>(p) + ", " + std::get<propertyNamePos>(p)).c_str());
+
+            auto propertyValue = util::SDBusPlus::getProperty<decltype(value)>(
+                bus, std::get<propertyPathPos>(p),
+                std::get<propertyInterfacePos>(p),
+                std::get<propertyNamePos>(p));
+
+            if (value != propertyValue)
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+// Note: Future code will check 'mode' before starting control algorithm
+Manager::Manager(sdbusplus::bus_t& bus, const sdeventplus::Event& event,
+                 Mode mode) :
+    _bus(bus),
+    _objMgr(bus, CONTROL_OBJPATH)
+{
+    log<level::INFO>("Manager enter");
+    // Create the appropriate Zone objects based on the
+    // actual system configuration.
+
+    // Find the 1 ZoneGroup that meets all of its conditions
+    for (auto& group : _zoneLayouts)
+    {
+
+        log<level::INFO>("Manager iterating through _zoneLayouts");
+        auto& conditions = std::get<conditionListPos>(group);
+        log<level::INFO>("Manager got the conditions");
+
+        log<level::INFO>(("Manager condition: " + std::get<0>(*conditions.begin())).c_str());
+
+        if (std::all_of(conditions.begin(), conditions.end(),
+                        [&bus](const auto& condition) {
+                            return checkCondition(bus, condition);
+                        }))
+        {
+            log<level::INFO>("Manager got one that matches the conditions");
+            // Create a Zone object for each zone in this group
+            auto& zones = std::get<zoneListPos>(group);
+
+            for (auto& z : zones)
+            {
+                log<level::INFO>("Manager iterating through zones in the one that matches the conditions");
+                fs::path path{CONTROL_OBJPATH};
+                path /= std::to_string(std::get<zoneNumPos>(z));
+                _zones.emplace(std::get<zoneNumPos>(z),
+                               std::make_unique<Zone>(mode, _bus, path.string(),
+                                                      event, z));
+            }
+
+            break;
+        }
+    }
+    log<level::INFO>("Manager end of iteration");
+    if (mode == Mode::control)
+    {
+        log<level::INFO>("Manager in mode control now");
+        bus.request_name(CONTROL_BUSNAME);
+    }
+}
+
+void Manager::doInit(const sdeventplus::Event& /*event*/)
+{
+    log<level::INFO>("Manager in do init");
+    for (auto& z : _zones)
+    {
+        log<level::INFO>("Manager do init setting speed");
+        z.second->setFullSpeed();
+    }
+    auto delay = _powerOnDelay;
+    while (delay > 0)
+    {
+        delay = sleep(delay);
+    }
+    log<level::INFO>("Manager calling bus here: ");
+    util::SDBusPlus::callMethod(_bus, SYSTEMD_SERVICE, SYSTEMD_OBJ_PATH,
+                                SYSTEMD_INTERFACE, "StartUnit",
+                                FAN_CONTROL_READY_TARGET, "replace");
+}
+
+} // namespace control
+} // namespace fan
+} // namespace phosphor

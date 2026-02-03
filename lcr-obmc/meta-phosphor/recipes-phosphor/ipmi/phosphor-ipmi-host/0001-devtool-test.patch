@@ -1,0 +1,23 @@
+From 70e00b5173328a123ce049f6b2f82d2d239bb0b4 Mon Sep 17 00:00:00 2001
+From: jswiftlcr714 <jswift@lcrembedded.com>
+Date: Tue, 5 Aug 2025 16:43:04 -0400
+Subject: [PATCH] devtool test
+
+---
+ vita4611/vita4611cm.cpp | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/vita4611/vita4611cm.cpp b/vita4611/vita4611cm.cpp
+index e91612d..2b79e5f 100644
+--- a/vita4611/vita4611cm.cpp
++++ b/vita4611/vita4611cm.cpp
+@@ -11,7 +11,8 @@
+ #include <unistd.h>
+ //testing testing testing once again testing
+ extern std::ofstream dbgFile;
+-
++//I am adding some more stuff to make sure this is bvery very different
++//this is a test of devtool.
+ typedef std::tuple<int, uint8_t, uint8_t, uint8_t, uint8_t, std::vector<uint8_t>> ipmb_response_return_type_t;
+ 
+ /*

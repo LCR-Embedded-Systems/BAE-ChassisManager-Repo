@@ -1,0 +1,1 @@
+To build the OpenBMC image for zc702-zynq7 run 'bitbake obmc-phosphor-image'

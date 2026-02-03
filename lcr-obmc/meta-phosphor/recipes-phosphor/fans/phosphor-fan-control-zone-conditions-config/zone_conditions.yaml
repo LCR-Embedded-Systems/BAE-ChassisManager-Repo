@@ -1,0 +1,12 @@
+#Default zone conditions definition YAML - empty.
+#For format, see documentation in fan control code repository example yaml.
+
+conditions:
+ - name: air_cooled_chassis
+   type: getProperty
+   properties:
+     - property: AirCooled
+       interface: xyz.openbmc_project.Inventory.Decorator.CoolingType
+       path: /xyz/openbmc_project/inventory/system/chassis/LCR_ChM
+       type: bool
+       value: true

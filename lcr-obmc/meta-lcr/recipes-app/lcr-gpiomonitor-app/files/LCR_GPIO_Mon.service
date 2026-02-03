@@ -1,0 +1,11 @@
+[Unit]
+Description=GPIO Monitor Service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/lcrgpiomonitor
+Restart=always
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

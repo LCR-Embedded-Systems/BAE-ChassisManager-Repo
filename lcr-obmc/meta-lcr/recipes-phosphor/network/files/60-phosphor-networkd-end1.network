@@ -1,0 +1,12 @@
+[Match]
+Name=end1
+
+[Link]
+ConfigureWithoutCarrier=yes
+
+[Network]
+DHCP=no
+Address=192.168.1.1/24
+Gateway=192.168.0.1
+DNS=8.8.8.8
+

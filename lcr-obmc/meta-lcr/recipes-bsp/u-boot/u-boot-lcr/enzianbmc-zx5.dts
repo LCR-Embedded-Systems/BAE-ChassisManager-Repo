@@ -1,0 +1,115 @@
+/* The includes in this device tree file are the ones
+ * that the enclustra-bsb-xilinx uses
+ * (except for the PE1 carrier board one, that we don't need)
+ * The rest is custom for the Enzian BMC
+ */
+
+/dts-v1/;
+
+#include "ME-ZX5-15-2I-D10.dtsi"
+
+/ {
+    chosen {
+        stdout-path = "serial0:115200n8";
+    };
+
+    /* Offset of the boot FIT in QSPI flash */
+    config {
+        u-boot,spl-payload-offset = <0x01000000>;
+    };
+};
+
+/* From zynq_enclustra_qspi_parts.dtsi
+ * partition layout adapted
+ */
+&qspi {
+	u-boot,dm-pre-reloc;
+	status = "okay";
+	is-dual = <0>;
+	num-cs = <1>;
+
+	nor@0 {
+		compatible = "n25q128a11";
+		reg = <0x0>;
+		spi-tx-bus-width = <1>;
+		spi-rx-bus-width = <4>;
+		spi-max-frequency = <50000000>;
+
+        partitions {
+            compatible = "fixed-partitions";
+            #address-cells = <1>;
+		    #size-cells = <1>;
+
+            partition@0 {
+                label = "qspi-fsbl";
+                reg = <0x0000000 0x1000000>;
+            };
+            partition@1000000 {
+                label = "qspi-bootimage";
+                reg = <0x1000000 0xf00000>;
+            };
+            partition@1f00000 {
+                label = "qspi-bootenv";
+                reg = <0x1f00000 0x80000>;
+            };
+            partition@1f80000 {
+                label = "qspi-bootscript";
+                reg = <0x1f80000 0x80000>;
+            };
+            partition@2000000 {
+                label = "qspi-fitimage";
+                reg = <0x2000000 0x2000000>;
+            };
+        };
+	};
+};
+
+/* From zynq_enclustra_nand_parts.dtsi
+ * partition layout adapted
+ */
+&smcc {
+	status = "okay";
+};
+
+&nfc0 {
+	status = "okay";
+
+	nand@0 {
+		reg = <0>;
+        /* Enclustra puts these on the parent
+         * but need to be here
+         */
+        nand-ecc-mode = "on-die";
+	    nand-bus-width = <0x8>;
+
+        partitions {
+            compatible = "fixed-partitions";
+		    #address-cells = <1>;
+		    #size-cells = <1>;
+
+            partition@0 {
+                label = "nand-kernel";
+                reg = <0x0000000 0x2000000>;
+            };
+            partition@2000000 {
+                label = "nand-devicetree";
+                reg = <0x2000000 0x80000>;
+            };
+            partition@2080000 {
+                label = "nand-bootscript";
+                reg = <0x2080000 0x80000>;
+            };
+            partition@2100000 {
+                label = "nand-rootfs";
+                reg = <0x2100000 0x1DF00000>;
+            };
+        };
+	};
+};
+
+/********************** 
+ * Programmable logic *
+ **********************/
+&fpga_full {
+	/* Nothing needed in U-Boot */
+};

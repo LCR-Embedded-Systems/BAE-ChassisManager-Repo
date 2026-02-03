@@ -1,0 +1,30 @@
+{
+    "TempLimits": {
+        "min": -20.0,
+        "max": 80.0
+    },
+    "12V_Rail": {
+        "min": 11.4,
+        "max": 12.6
+    },
+    "12nauxV_Rail": {
+        "min": 11.4,
+        "max": 12.6
+    },
+    "12pauxV_Rail": {
+        "min": 11.4,
+        "max": 12.6
+    },
+    "3_3V_Rail": {
+        "min": 3.135,
+        "max": 3.465
+    },
+    "3_3auxV_Rail": {
+        "min": 3.135,
+        "max": 3.465
+    },
+    "5V_Rail": {
+        "min": 4.75,
+        "max": 5.25
+    }
+}

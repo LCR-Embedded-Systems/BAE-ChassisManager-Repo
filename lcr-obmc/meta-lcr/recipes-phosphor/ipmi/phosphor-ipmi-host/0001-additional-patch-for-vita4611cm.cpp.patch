@@ -1,0 +1,28 @@
+From a919bba21cdaed0de6f339805782f118b7d7c786 Mon Sep 17 00:00:00 2001
+From: Mark Rush <mrush@mindspring.com>
+Date: Fri, 11 Apr 2025 15:36:20 +0000
+Subject: [PATCH] additional-patch-for-vita4611cm.cpp
+
+---
+ vita4611/vita4611cm.cpp | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/vita4611/vita4611cm.cpp b/vita4611/vita4611cm.cpp
+index 144dc0e..df85cb5 100644
+--- a/vita4611/vita4611cm.cpp
++++ b/vita4611/vita4611cm.cpp
+@@ -460,7 +460,6 @@ std::vector<uint8_t> VITA4611_ChassisManager::getShMCVSOCaps()
+ 
+ void VITA4611_ChassisManager::get_device_list(std::vector<uint8_t>& ipmi_address_list)
+ {
+-    ipmi_address_list.push_back(0x20 << 1); /* first address is our own bmc */
+     for (const auto& pair: i2cdeviceMap) {
+         const std::vector<I2CDeviceInfo>& vec = pair.second;
+ 
+@@ -647,4 +646,4 @@ VITA4611_ChassisManager::execute_passthrough_cmd(const std::vector<uint8_t>& req
+     }
+ 
+     return ipmi::responseUnspecifiedError();
+-}
+\ No newline at end of file
++}

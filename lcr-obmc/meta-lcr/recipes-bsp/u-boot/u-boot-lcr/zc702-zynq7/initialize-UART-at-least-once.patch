@@ -1,0 +1,31 @@
+From efa775fb6309f4dc99f6bb59e7b2ebd5ad50e0f6 Mon Sep 17 00:00:00 2001
+From: Daniel Schwyn <daniel.schwyn@inf.ethz.ch>
+Date: Fri, 30 Jun 2023 10:17:57 +0200
+Subject: [PATCH] Initialize UART at least once
+
+---
+ drivers/serial/serial_zynq.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/serial/serial_zynq.c b/drivers/serial/serial_zynq.c
+index fd999368ab..471484ea6b 100644
+--- a/drivers/serial/serial_zynq.c
++++ b/drivers/serial/serial_zynq.c
+@@ -207,12 +207,9 @@ static int zynq_serial_setconfig(struct udevice *dev, uint serial_config)
+ static int zynq_serial_probe(struct udevice *dev)
+ {
+ 	struct zynq_uart_plat *plat = dev_get_plat(dev);
+-	struct uart_zynq *regs = plat->regs;
+-	u32 val;
+ 
+-	/* No need to reinitialize the UART if TX already enabled */
+-	val = readl(&regs->control);
+-	if (val & ZYNQ_UART_CR_TX_EN)
++	/* No need to reinitialize the UART after relocation */
++	if (gd->flags & GD_FLG_RELOC)
+ 		return 0;
+ 
+ 	_uart_zynq_serial_init(plat->regs);
+-- 
+2.25.1
+
