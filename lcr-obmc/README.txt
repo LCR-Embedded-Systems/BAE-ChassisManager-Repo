@@ -35,7 +35,7 @@ $ mkdir projects && cd projects
 $ sudo mkdir /tftpboot
 $ sudo chmod 777 /tftpboot
 
-# Fetch source repositories
+# Fetch source repositories (replace with your repository)
 $ git clone git@github.com:jeff-triple-crown/LCR-ChassisManager-Repo.git
 
 #  download petalinux 2024.2 from site:
