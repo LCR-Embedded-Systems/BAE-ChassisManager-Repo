@@ -5,7 +5,7 @@ vimtags
 setproj
 vimtagfile
 dirtags
-**/build
+lcr-obmc/build
 **/*~
 **/*/*~
 **/cscope*
