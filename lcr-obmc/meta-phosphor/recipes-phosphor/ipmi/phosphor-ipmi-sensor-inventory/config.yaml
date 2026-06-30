@@ -1,3 +1,146 @@
+0x00:
+  entityID: 0xA0
+  entityInstance: 0
+  sensorType: 0xF0
+  path: /xyz/openbmc_project/sensors/mandatoryNumbers
+  sensorReadingType: 0x6f
+  serviceInterface: xyz.openbmc_project.Sensor.Value
+  readingType: readingData
+  mutability: Mutability::Write|Mutability::Read
+  sensorNamePattern: nameLeaf
+  sensorName: VSO_FRU_STATE
+  interfaces:
+    xyz.openbmc_project.Sensor.Value:
+      Value:
+        Offsets:
+          0xFF:
+            type: int
+
+0x01:
+  entityID: 0xA0
+  entityInstance: 0
+  sensorType: 0xF1
+  path: /xyz/openbmc_project/sensors/mandatoryNumbers
+  sensorReadingType: 0x6f
+  serviceInterface: xyz.openbmc_project.Sensor.Value
+  readingType: readingData
+  mutability: Mutability::Write|Mutability::Read
+  sensorNamePattern: nameLeaf
+  sensorName: VSO_IPMB_LINK
+  interfaces:
+    xyz.openbmc_project.Sensor.Value:
+      Value:
+        Offsets:
+          0xFF:
+            type: int
+
+0x02:
+  entityID: 0xA0
+  entityInstance: 0
+  sensorType: 0xF2
+  path: /xyz/openbmc_project/sensors/mandatoryNumbers/VSO_FRU_HEALTH
+  sensorReadingType: 0x04
+  serviceInterface: xyz.openbmc_project.Sensor.Value
+  readingType: readingData
+  mutability: Mutability::Write|Mutability::Read
+  sensorNamePattern: nameLeaf
+  sensorName: VSO_FRU_HEALTH
+  interfaces:
+    xyz.openbmc_project.Sensor.Value:
+      Value:
+        Offsets:
+          0xFF:
+            type: int
+  
+0x03:
+  entityID: 0xA0
+  entityInstance: 0
+  sensorType: 0x02
+  path: /xyz/openbmc_project/sensors/mandatoryNumbers/VSO_VOLTAGE
+  sensorReadingType: 0x05
+  serviceInterface: xyz.openbmc_project.Sensor.Value
+  readingType: readingData
+  mutability: Mutability::Write|Mutability::Read
+  sensorNamePattern: nameLeaf
+  sensorName: VSO_VOLTAGE
+  interfaces:
+    xyz.openbmc_project.Sensor.Value:
+      Value:
+        Offsets:
+          0xFF:
+            type: int
+
+0x04:
+  entityID: 0xA0
+  entityInstance: 0
+  sensorType: 0xf3
+  path: /xyz/openbmc_project/sensors/mandatoryNumbers/VSO_TEMPERATURE
+  sensorReadingType: 0x6f
+  serviceInterface: xyz.openbmc_project.Sensor.Value
+  readingType: readingData
+  mutability: Mutability::Write|Mutability::Read
+  sensorNamePattern: nameLeaf
+  sensorName: VSO_TEMPERATURE
+  interfaces:
+    xyz.openbmc_project.Sensor.Value:
+      Value:
+        Offsets:
+          0xFF:
+            type: int
+
+0x05:
+  entityID: 0xA0
+  entityInstance: 0
+  sensorType: 0xf4
+  path: /xyz/openbmc_project/sensors/mandatoryNumbers
+  sensorReadingType: 0x04
+  serviceInterface: xyz.openbmc_project.Sensor.Value
+  readingType: readingData
+  mutability: Mutability::Write|Mutability::Read
+  sensorNamePattern: nameLeaf
+  sensorName: VSO_PAYL_TEST
+  interfaces:
+    xyz.openbmc_project.Sensor.Value:
+      Value:
+        Offsets:
+          0xFF:
+            type: int
+
+0x06:
+  entityID: 0xA0
+  entityInstance: 0
+  sensorType: 0xf5
+  path: /xyz/openbmc_project/sensors/mandatoryNumbers
+  sensorReadingType: 0x03
+  serviceInterface: xyz.openbmc_project.Sensor.Value
+  readingType: readingData
+  mutability: Mutability::Write|Mutability::Read
+  sensorNamePattern: nameLeaf
+  sensorName: VSO_PAYL_STATUS
+  interfaces:
+    xyz.openbmc_project.Sensor.Value:
+      Value:
+        Offsets:
+          0xFF:
+            type: int
+
+0x07:
+  entityID: 0xA0
+  entityInstance: 0
+  sensorType: 0xf6
+  path: /xyz/openbmc_project/sensors/mandatoryNumbers
+  sensorReadingType: 0x01
+  serviceInterface: xyz.openbmc_project.Sensor.Value
+  readingType: readingData
+  mutability: Mutability::Write|Mutability::Read
+  sensorNamePattern: nameLeaf
+  sensorName: FRU_MODE
+  interfaces:
+    xyz.openbmc_project.Sensor.Value:
+      Value:
+        Offsets:
+          0xFF:
+            type: int
 
 0x0b:
   entityID: 0x22

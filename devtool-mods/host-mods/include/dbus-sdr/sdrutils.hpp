@@ -30,6 +30,7 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
+#include <fstream>
 
 #pragma once
 
@@ -300,6 +301,39 @@ struct CmpStr
 
 static constexpr size_t sensorTypeCodes = 0;
 static constexpr size_t sensorEventTypeCodes = 1;
+
+const std::map<std::string, uint8_t> MandatorySensorNumbers = {
+    { "VSO_FRU_STATE", 0x00 },
+    { "VSO_IPMB_LINK", 0x01 },
+    { "VSO_FRU_HEALTH", 0x02 },
+    { "VSO_VOLTAGE", 0x03 },
+    { "VSO_TEMPERATURE", 0x04 },
+    { "VSO_PAYL_TEST", 0x05 },
+    { "VSO_PAYL_STATUS", 0x06 },
+    { "FRU_MODE", 0x07 }
+};
+
+const std::map<std::string, uint8_t> MandatorySensorNumberTypes = {
+    { "VSO_FRU_STATE", 0xF0 },
+    { "VSO_IPMB_LINK", 0xF1 },
+    { "VSO_FRU_HEALTH", 0xF2 },
+    { "VSO_VOLTAGE", 0x02 },
+    { "VSO_TEMPERATURE", 0xF3 },
+    { "VSO_PAYL_TEST", 0xF4 },
+    { "VSO_PAYL_STATUS", 0xF5 },
+    { "FRU_MODE", 0xF7 }
+};
+
+const std::map<std::string, uint8_t> MandatorySensorEventTypes = {
+    { "VSO_FRU_STATE", 0x6F },
+    { "VSO_IPMB_LINK", 0x6F },
+    { "VSO_FRU_HEALTH", 0x02 },
+    { "VSO_VOLTAGE", 0x05 },
+    { "VSO_TEMPERATURE", 0x6F },
+    { "VSO_PAYL_TEST", 0x04 },
+    { "VSO_PAYL_STATUS", 0x03 },
+    { "FRU_MODE", 0x6F }
+};
 
 enum class SensorTypeCodes : uint8_t
 {

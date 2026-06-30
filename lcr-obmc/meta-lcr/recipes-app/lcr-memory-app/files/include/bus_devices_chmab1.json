@@ -1,0 +1,190 @@
+{
+    "name": "CMAB CLC Chassis_1",
+    "fancontrol": true,
+    "tempsensors": {
+        "hwmon2" : {
+            "name" : "Adapter_Board",
+            "number" : 8,
+            "bus" : 4,
+            "address" : 79
+        },
+        "hwmon6" : {
+            "name" : "slot_2_3",
+            "number" : 9,
+            "bus" : 4,
+            "address" : 72
+        },
+        "hwmon7" : {
+            "name" : "slot_6_7",
+            "number" : 10,
+            "bus" : 4,
+            "address" : 73
+        },
+        "hwmon8" : {
+            "name" : "slot_10_11",
+            "number" : 11,
+            "bus" : 4,
+            "address" : 74
+        },
+        "hwmon9" : {
+            "name" : "slot_13_14",
+            "number" : 12,
+            "bus" : 4,
+            "address" : 75
+        }
+    },
+    "adcsensors": {
+        "iio:device0": {
+            "bus" : 4,
+            "address" : 47,
+            "Fan_Voltage": {
+                "type": "voltage",
+                "dir": "in_voltage0_raw",
+                "target": 28.0,
+                "nominal": 1.0,
+                "max": 2.5,
+                "number" : 13,
+                "present": true
+            },
+            "fan_1current": {
+                "type": "current",
+                "dir": "in_voltage1_raw",
+                "target": 10.0,
+                "nominal": 2.0,
+                "max": 2.5,
+                "number" : 14,
+                "present": true
+            },
+            "fan_2current": {
+                "type": "current",
+                "dir": "in_voltage2_raw",
+                "target": 10.0,
+                "nominal": 2.0,
+                "max": 2.5,
+                "number" : 15,
+                "present": true
+            },
+            "fan_3current": {
+                "type": "current",
+                "dir": "in_voltage3_raw",
+                "target": 10.0,
+                "nominal": 2.0,
+                "max": 2.5,
+                "number" : 16,
+                "present": true
+            },
+            "fan_4current": {
+                "type": "current",
+                "dir": "in_voltage4_raw",
+                "target": 10.0,
+                "nominal": 2.0,
+                "max": 2.5,
+                "number" : 17,
+                "present": true
+            }
+        },
+        "iio:device1": {
+            "bus" : 0,
+            "address" : 0,
+            "12V_Rail": {
+                "type": "voltage",
+                "dir": "in_voltage9_raw",
+                "target": 12.0,
+                "number" : 18,
+                "present": true
+            },
+            "3_3V_Rail": {
+                "type": "voltage",
+                "dir":  "in_voltage10_raw",
+                "target": 3.3,
+                "number" : 19,
+                "present": true
+            },
+            "5V_Rail": {
+                "type": "voltage",
+                "dir": "in_voltage11_raw",
+                "target": 5.0,
+                "number" : 20,
+                "present": true
+            },
+            "3_3auxV_Rail": {
+                "type": "voltage",
+                "dir": "in_voltage12_raw",
+                "target": 3.3,
+                "number" : 21,
+                "present": true
+            },
+            "12pauxV_Rail": {
+                "type": "voltage",
+                "dir": "in_voltage13_raw",
+                "target": 12.0,
+                "number" : 22,
+                "present": true
+            },
+            "12nauxV_Rail": {
+                "type": "voltage",
+                "dir": "in_voltage14_raw",
+                "target": -12.0,
+                "number" : 23,
+                "present": true
+            } 
+        }
+    },
+    "fancontrollers": {
+        "hwmon4": {
+            "bus" : 4,
+            "address" : 35,
+            "chassis_fan": {
+                "dir" : 1,
+                "number" : 24
+            }
+        },
+        "hwmon5": {
+            "bus" : 2,
+            "address" : 32
+        }
+    },
+    "gpioexpanders": {
+        "gpiochip6" : {
+            "bus" : 4,
+            "address" : 25,
+            "POWER_LED_RED" : 0,
+            "POWER_LED_GRN" : 1,
+            "TEMP_LED_RED" : 2,
+            "TEMP_LED_GRN" : 3,
+            "USER_LED_RED" : 4,
+            "USER_LED_GRN" : 5,
+            "FAULT_LED_RED" : 6,
+            "FAULT_LED_GRN" : 7,
+            "PS1_FAN_FAIL" : 8,
+            "PS2_FAN_FAIL" : 9,
+            "INTRUSION" : 10,
+            "POWER_SWITCH_INPUT_CHM" : 11,
+            "ZEROIZE_INPUT" : 12,
+            "unused0" : 13,
+            "unused1" : 14,
+            "unused2" : 15
+        },
+        "gpiochip7" : {
+            "bus" : 4,
+            "address" : 40,
+            "slot1_maskable_reset" : 0,
+            "slot2_maskable_reset" : 1,
+            "slot3_maskable_reset" : 2,
+            "slot4_maskable_reset" : 3,
+            "slot5_maskable_reset" : 4,
+            "slot6_maskable_reset" : 5,
+            "slot7_maskable_reset" : 6,
+            "slot8_maskable_reset" : 7,
+            "slot9_maskable_reset" : 8,
+            "slot10_maskable_reset" : 9,
+            "slot11_maskable_reset" : 10,
+            "slot12_maskable_reset" : 11,
+            "slot13_maskable_reset" : 12,
+            "slot14_maskable_reset" : 13,
+            "slot15_maskable_reset" : 14,
+            "slot16_maskable_reset" : 15
+        }
+    }
+}
+

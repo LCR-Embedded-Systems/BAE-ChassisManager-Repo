@@ -31,7 +31,7 @@ class GpioMonitor
 
     public:
     
-        GpioMonitor();
+        GpioMonitor(std::shared_ptr<sdbusplus::asio::connection> conn_ref, sdbusplus::asio::object_server& server_ref);
         ~GpioMonitor();
 
         bool readgpio(gpio_info* target_gpio);
@@ -43,19 +43,26 @@ class GpioMonitor
         void expose_gpio(const gpio_info& target_gpio);
         void expose_gpios();
 
-        void run_monitor();
-
         void update_bus(gpio_info* target_gpio);
+
+        void schedule_update();
 
         double get_ts();
 
+        void async_readgpio(const std::string& gpio_name, std::function<void(bool, int)> callback);
+        void async_readallpins();
+        void async_update_bus(const std::string& gpio_name, bool new_status);
+
     private:
 
-        sdbusplus::bus::bus bus;
+        std::shared_ptr<sdbusplus::asio::connection> conn;
+        sdbusplus::asio::object_server& obj_server;
+        std::map<std::string, std::unique_ptr<sdbusplus::asio::dbus_interface>> m_value_iface;
+        std::map<std::string, std::unique_ptr<sdbusplus::asio::dbus_interface>> m_assoc_iface;
+        boost::asio::steady_timer timer;
 
-        std::map<std::string, std::unique_ptr<sdbusplus::server::object_t<ValueIface, AssociationIface>>> gpioIfaces;
-
-        std::vector<gpio_info> available_gpios;
+        std::unordered_map<std::string, gpio_info> available_gpios;
+        std::unordered_map<std::string, gpio_info> chassis_signals;
 
         gpio_info sysreset;
         gpio_info nvmro;
@@ -89,4 +96,5 @@ class GpioMonitor
 
         double ts;
         
+        nlohmann::json configJson;
 };

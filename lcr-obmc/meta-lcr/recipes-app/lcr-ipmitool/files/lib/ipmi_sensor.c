@@ -503,7 +503,7 @@ ipmi_sensor_list(struct ipmi_intf *intf)
 		lprintf(LOG_ERR, "Unable to open SDR for reading");
 		return -1;
 	}
-	lprintf(LOG_NOTICE, "starting while loop\n");
+	// lprintf(LOG_NOTICE, "starting while loop\n");
 	while ((header = ipmi_sdr_get_next_header(intf, itr))) {
 		uint8_t *rec;
 
@@ -991,7 +991,7 @@ int
 ipmi_sensor_main(struct ipmi_intf *intf, int argc, char **argv)
 {
 	int rc = 0;
-	lprintf(LOG_NOTICE, "In ipmi sensor main...\n");
+	// lprintf(LOG_NOTICE, "In ipmi sensor main...\n");
 	if (argc == 0) {
 		rc = ipmi_sensor_list(intf);
 	} else if (!strcmp(argv[0], "help")) {

@@ -6,3 +6,24 @@ fans:
     - pwm1
    target_interface: xyz.openbmc_project.Control.FanPwm
    target_path: /xyz/openbmc_project/control/fanpwm/
+ - inventory: /system/chassis/LCR_ChM/fan_2
+   cooling_zone: 0
+   cooling_profile: air
+   sensors:
+    - pwm2
+   target_interface: xyz.openbmc_project.Control.FanPwm
+   target_path: /xyz/openbmc_project/control/fanpwm/
+ - inventory: /system/chassis/LCR_ChM/fan_3
+   cooling_zone: 0
+   cooling_profile: air
+   sensors:
+    - pwm3
+   target_interface: xyz.openbmc_project.Control.FanPwm
+   target_path: /xyz/openbmc_project/control/fanpwm/
+ - inventory: /system/chassis/LCR_ChM/fan_4
+   cooling_zone: 0
+   cooling_profile: air
+   sensors:
+    - pwm4
+   target_interface: xyz.openbmc_project.Control.FanPwm
+   target_path: /xyz/openbmc_project/control/fanpwm/

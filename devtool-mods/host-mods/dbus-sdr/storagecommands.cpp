@@ -171,7 +171,7 @@ void createTimers()
 
 void recalculateHashes()
 {
-
+    phosphor::logging::log<phosphor::logging::level::INFO>("recalculateHashes enter");
     deviceHashes.clear();
     // hash the object paths to create unique device id's. increment on
     // collision
@@ -260,6 +260,7 @@ void replaceCacheFru(
 std::pair<ipmi::Cc, std::vector<uint8_t>> getFru(ipmi::Context::ptr ctx,
                                                  uint8_t devId)
 {
+    phosphor::logging::log<phosphor::logging::level::INFO>("getFru enter");
     if (lastDevId == devId && devId != 0xFF)
     {
         return {ipmi::ccSuccess, fruCache};
@@ -392,6 +393,7 @@ ipmi::RspType<uint8_t,             // Count
     ipmiStorageReadFruData(ipmi::Context::ptr ctx, uint8_t fruDeviceId,
                            uint16_t fruInventoryOffset, uint8_t countToRead)
 {
+    phosphor::logging::log<phosphor::logging::level::INFO>("ipmiStorageReadFruData enter");
     if (fruDeviceId == 0xFF)
     {
         return ipmi::responseInvalidFieldRequest();
@@ -440,6 +442,7 @@ ipmi::RspType<uint8_t>
                             uint16_t fruInventoryOffset,
                             std::vector<uint8_t>& dataToWrite)
 {
+    phosphor::logging::log<phosphor::logging::level::INFO>("ipmiStorageWriteFruData enter");
     if (fruDeviceId == 0xFF)
     {
         return ipmi::responseInvalidFieldRequest();
@@ -574,6 +577,7 @@ ipmi_ret_t getFruSdrCount(ipmi::Context::ptr, size_t& count)
 ipmi_ret_t getFruSdrs(ipmi::Context::ptr ctx, size_t index,
                       get_sdr::SensorDataFruRecord& resp)
 {
+    // phosphor::logging::log<phosphor::logging::level::INFO>("getFruSdrs enter");
     if (deviceHashes.size() < index)
     {
         return IPMI_CC_INVALID_FIELD_REQUEST;
@@ -750,6 +754,7 @@ ipmi_ret_t getFruSdrs(ipmi::Context::ptr ctx, size_t index,
 
 static bool getSELLogFiles(std::vector<std::filesystem::path>& selLogFiles)
 {
+    phosphor::logging::log<phosphor::logging::level::INFO>("getSELLogFiles enter");
     // Loop through the directory looking for ipmi_sel log files
     for (const std::filesystem::directory_entry& dirEnt :
          std::filesystem::directory_iterator(
@@ -774,6 +779,7 @@ static bool getSELLogFiles(std::vector<std::filesystem::path>& selLogFiles)
 
 static int countSELEntries()
 {
+    phosphor::logging::log<phosphor::logging::level::INFO>("countSELEntries enter");
     // Get the list of ipmi_sel log files
     std::vector<std::filesystem::path> selLogFiles;
     if (!getSELLogFiles(selLogFiles))
@@ -796,17 +802,18 @@ static int countSELEntries()
             numSELEntries++;
         }
     }
+
     return numSELEntries;
 }
 
 static bool findSELEntry(const int recordID,
-                         const std::vector<std::filesystem::path>& selLogFiles,
-                         std::string& entry)
+    const std::vector<std::filesystem::path>& selLogFiles,
+    std::string& entry)
 {
+    phosphor::logging::log<phosphor::logging::level::INFO>("findSELEntry enter");
     // Record ID is the first entry field following the timestamp. It is
     // preceded by a space and followed by a comma
     std::string search = " " + std::to_string(recordID) + ",";
-
     // Loop through the ipmi_sel log entries
     for (const std::filesystem::path& file : selLogFiles)
     {
@@ -815,7 +822,6 @@ static bool findSELEntry(const int recordID,
         {
             continue;
         }
-
         while (std::getline(logStream, entry))
         {
             // Check if the record ID matches
@@ -830,8 +836,9 @@ static bool findSELEntry(const int recordID,
 
 static uint16_t
     getNextRecordID(const uint16_t recordID,
-                    const std::vector<std::filesystem::path>& selLogFiles)
+        const std::vector<std::filesystem::path>& selLogFiles)
 {
+    phosphor::logging::log<phosphor::logging::level::INFO>("getNextRecordID enter");
     uint16_t nextRecordID = recordID + 1;
     std::string entry;
     if (findSELEntry(nextRecordID, selLogFiles, entry))
@@ -875,6 +882,7 @@ ipmi::RspType<uint8_t,  // SEL version
               uint8_t>  // operation support
     ipmiStorageGetSELInfo()
 {
+    phosphor::logging::log<phosphor::logging::level::INFO>("ipmiStorageGetSELInfo enter");
     constexpr uint8_t selVersion = ipmi::sel::selVersion;
     uint16_t entries = countSELEntries();
     uint32_t addTimeStamp = dynamic_sensors::ipmi::sel::getFileTimestamp(
@@ -915,6 +923,7 @@ ipmi::RspType<uint16_t, // Next Record ID
     ipmiStorageGetSELEntry(uint16_t reservationID, uint16_t targetID,
                            uint8_t offset, uint8_t size)
 {
+    // phosphor::logging::log<phosphor::logging::level::INFO>(("ipmiStorageGetSELEntry enter for reservationID " + std::to_string(reservationID) + " targetID " + std::to_string(targetID)).c_str() );
     // Only support getting the entire SEL record. If a partial size or non-zero
     // offset is requested, return an error
     if (offset != 0 || size != ipmi::sel::entireRecord)
@@ -977,7 +986,7 @@ ipmi::RspType<uint16_t, // Next Record ID
             return ipmi::responseSensorInvalid();
         }
     }
-
+    
     // The format of the ipmi_sel message is "<Timestamp>
     // <ID>,<Type>,<EventData>,[<Generator ID>,<Path>,<Direction>]".
     // First get the Timestamp
@@ -1131,6 +1140,7 @@ ipmi::RspType<uint8_t> ipmiStorageClearSEL(ipmi::Context::ptr ctx,
                                            const std::array<uint8_t, 3>& clr,
                                            uint8_t eraseOperation)
 {
+    phosphor::logging::log<phosphor::logging::level::INFO>("ipmiStorageClearSEL enter");
     if (!checkSELReservation(reservationID))
     {
         return ipmi::responseInvalidReservationId();
@@ -1155,6 +1165,7 @@ ipmi::RspType<uint8_t> ipmiStorageClearSEL(ipmi::Context::ptr ctx,
         return ipmi::responseInvalidFieldRequest();
     }
 
+    phosphor::logging::log<phosphor::logging::level::INFO>("ipmiStorageClearSEL trying to cancel SEL reservation");
     // Per the IPMI spec, need to cancel any reservation when the SEL is
     // cleared
     cancelSELReservation();
@@ -1174,6 +1185,7 @@ ipmi::RspType<uint8_t> ipmiStorageClearSEL(ipmi::Context::ptr ctx,
         }
     }
 
+    phosphor::logging::log<phosphor::logging::level::INFO>("ipmiStorageClearSEL sending the clear to rsyslog");
     // Reload rsyslog so it knows to start new log files
     boost::system::error_code ec;
     ctx->bus->yield_method_call<>(ctx->yield, ec, "org.freedesktop.systemd1",
@@ -1186,6 +1198,7 @@ ipmi::RspType<uint8_t> ipmiStorageClearSEL(ipmi::Context::ptr ctx,
         return ipmi::responseUnspecifiedError();
     }
 #else
+    phosphor::logging::log<phosphor::logging::level::INFO>("ipmiStorageClearSEL sending the clear to Logging.IPMI");
     boost::system::error_code ec;
     ctx->bus->yield_method_call<>(ctx->yield, ec, selLoggerServiceName,
                                   "/xyz/openbmc_project/Logging/IPMI",
@@ -1199,6 +1212,7 @@ ipmi::RspType<uint8_t> ipmiStorageClearSEL(ipmi::Context::ptr ctx,
     // Save the erase time
     dynamic_sensors::ipmi::sel::erase_time::save();
 #endif
+    phosphor::logging::log<phosphor::logging::level::INFO>("ipmiStorageClearSEL sending erase complete");
     return ipmi::responseSuccess(ipmi::sel::eraseComplete);
 }
 

@@ -26,16 +26,15 @@
     interrupts = <0 45 4>;
     clocks = <&clkc 31>, <&clkc 31>, <&clkc 14>;
     clock-names = "pclk", "hclk", "tx_clk";
-    assigned-clocks = <&clkc 14>;
-    assigned-clock-rates = <125000000>;
+    #address-cells = <1>;
+    #size-cells = <0>;
+    enet-reset = <&gpio0 9 0>;
     phy-mode = "rgmii-id";
+    xlnx,ptp-enet-clock = <0x69f6bcb>;
     phy-handle = <&ethernet_phy1>;
-    mdio {
-        ethernet_phy1: ethernet-phy1@0 {
-            compatible = "marvell,88e1510";
-            reg = <0>;
-            marvell,reg-init = <18 20 0x0007 0x0002>,<18 20 0x8007 0x8002>,<1 16 0x0003 0x0001>,<1 26 0x4000 0x4000>,<1 0 0x8000 0x8000>;
-        };
+    ethernet_phy1: ethernet-phy@0 {
+        reg = <0>;
+        device_type = "ethernet-phy";
     };
 };
 
@@ -54,6 +53,75 @@
     temp_sensor_2: tmp100@4f {
         compatible = "ti,tmp100";
         reg = <0x4f>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
+
+    temp_sensor_9: tmp100@49 {
+        compatible = "ti,tmp100";
+        reg = <0x49>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
+
+    temp_sensor_10: tmp100@4A {
+        compatible = "ti,tmp100";
+        reg = <0x4A>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
+
+    temp_sensor_11: tmp100@4B {
+        compatible = "ti,tmp100";
+        reg = <0x4B>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
+
+    fan_controller_1: max31790@21 {
+        compatible = "maxim,max31790";
+        reg = <0x23>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
+
+    gpio_expander: max7313@19 {
+        compatible = "maxim,max7313";
+        reg = <0x19>;
+        gpio-controller;
+        #gpio-cells = <2>;
+    };
+    gpio_expander2: max7313@28 {
+        compatible = "maxim,max7313";
+        reg = <0x28>;
+        gpio-controller;
+        #gpio-cells = <2>;
+    };
+    gpio_expander3: pcal6408@20 {
+        compatible = "nxp,pcal6408";
+        reg = <0x20>;
+        gpio-controller;
+        #gpio-cells = <2>;
+    };
+    adc@2f {
+        compatible = "adi,ad7291";
+        reg = <0x2f>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
+    eeprom_1: eeprom@50 {
+        compatible = "st,m24m02-dr", "atmel,24c2048";
+        reg = <0x50>;
+        num-addresses = <4>;
+        pagesize = <256>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
+    eeprom_2: eeprom@54 {
+        compatible = "st,m24m02-dr", "atmel,24c2048";
+        reg = <0x54>;
+        num-addresses = <4>;
+        pagesize = <256>;
         #address-cells = <1>;
         #size-cells = <0>;
     };
@@ -117,6 +185,16 @@
         #address-cells = <1>;
         #size-cells = <0>;
     };
+
+    qm7_p5h_1: pmbus@64 {
+        compatible = "pmbus";
+        reg = <0x64>;
+    };
+
+    qm7_p5h_2: pmbus@65 {
+        compatible = "pmbus";
+        reg = <0x65>;
+    };
 };
 
 &axi_iic_fan_ctrl {
@@ -142,7 +220,7 @@
     clock-frequency = <100000>;
     ipmb@45 {
         compatible = "ipmb-dev";
-        reg = <0x20>;
+        reg = <0x10>;
         i2c-protocol;
         bmc-addr = <0x20>;
     };
@@ -153,7 +231,7 @@
     clock-frequency = <100000>;
     ipmb@45 {
         compatible = "ipmb-dev";
-        reg = <0x20>;
+        reg = <0x10>;
         i2c-protocol;
         bmc-addr = <0x20>;
     };
@@ -166,6 +244,9 @@
     reg = <0x0>;
     #address-cells = <1>;
     #size-cells = <1>;
+    spi-tx-bus-width = <1>;
+    spi-rx-bus-width = <2>;
+    spi-max-frequency = <50000000>;
     partitions {
         compatible = "fixed-partitions";
         #address-cells = <1>;
@@ -184,15 +265,42 @@
         };
         partition@3 {
             label = "qspi-data";
-            reg = <0x4840000 0x8000000>; /* 128 MB */
+            reg = <0x4840000 0x4000000>; /* 64 MB */
         };
         partition@4 {
             label = "qspi-logs";
-            reg = <0xC840000 0x2000000>; /* 32 MB */
+            reg = <0x8840000 0x2000000>; /* 32 MB */
+        };
+        partition@5 {
+            label = "qspi-sel";
+            reg = <0xA840000 0x100000>; /* 1 MB */
         };
     };
 };
 
+&axi_quad_spi_0 {
+    status = "okay";
+    #address-cells = <1>;
+    #size-cells = <0>;
+    interrupts = <0 66 4>;
+    interrupt-parent = <&intc>;
+    flash@0 {
+        compatible = "micron,mt25qu02g", "jedec,spi-nor";
+        reg = <0>;
+        spi-max-frequency = <50000000>;
+        #address-cells = <1>;
+        #size-cells = <1>;
+        partitions {
+            compatible = "fixed-partitions";
+            #address-cells = <1>;
+            #size-cells = <1>;
+            partition@0 {
+                label = "qspi-test";
+                reg = <0x0 0x800000>;   /* 8 MB */
+            };
+        };
+    };
+};
 &xadc_wiz_0 {
     #io-channel-cells = <1>;
     xlnx,channels {

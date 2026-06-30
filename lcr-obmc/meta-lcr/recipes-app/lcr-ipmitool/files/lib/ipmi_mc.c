@@ -73,10 +73,34 @@ ipmi_mc_reset(struct ipmi_intf * intf, int cmd)
 	if( !intf->opened )
 	intf->open(intf);
 
+
+	
+
 	memset(&req, 0, sizeof(req));
 	req.msg.netfn = IPMI_NETFN_APP;
 	req.msg.cmd = cmd;
 	req.msg.data_len = 0;
+
+	/* if the user provided a target address
+	*  use the address
+	*  convert it into a ipmi address before sending it
+	* else use the address 0x40 (ShMC i2c address is 0x20 and
+	*  ipmi address is 0x40)
+	*/
+	uint8_t msg_data[4];
+	if (true == intf->target_addr_valid) {
+		msg_data[0] = (intf->target_addr << 1);
+		msg_data[3] = req.msg.cmd;
+		req.msg.netfn = IPMI_NETFN_LCR_PASSTHROUGH;
+		req.msg.cmd = IPMI_LCR_CMD_PASSTHROUGH;
+		msg_data[1] = IPMI_NETFN_APP;
+		msg_data[2] = 0;
+		req.msg.data = msg_data;
+		req.msg.data_len = 4;
+	}
+	else {
+		msg_data[0] = 0x40; /* BMC ipmi address */
+	}
 
 	if (cmd == BMC_COLD_RESET)
 		intf->noanswer = 1;

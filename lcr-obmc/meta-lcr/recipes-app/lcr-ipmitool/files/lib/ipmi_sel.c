@@ -1531,6 +1531,7 @@ ipmi_get_sensor_type(struct ipmi_intf *intf, uint8_t code)
 static int
 ipmi_sel_get_info(struct ipmi_intf * intf)
 {
+
 	struct ipmi_rs * rsp;
 	struct ipmi_rq req;
 	// unsigned char msg_data[4];
@@ -1557,15 +1558,14 @@ ipmi_sel_get_info(struct ipmi_intf * intf)
 		msg_data_ipmb[3] = req.msg.cmd;
 		req.msg.netfn = IPMI_NETFN_LCR_PASSTHROUGH;
 		req.msg.cmd = IPMI_LCR_CMD_PASSTHROUGH;
-		msg_data_ipmb[1] = IPMI_NETFN_APP;
+		msg_data_ipmb[1] = IPMI_NETFN_STORAGE;
 		msg_data_ipmb[2] = 0;
 		req.msg.data = msg_data_ipmb;
 		req.msg.data_len = 4;
 	}
 	else {
-		msg_data_ipmb[0] = 0x40; /* BMC ipmi address */
+		msg_data_ipmb[0] = 0x20; /* BMC ipmi address */
 	}
-
 
 
 	rsp = intf->sendrecv(intf, &req);
@@ -1649,6 +1649,21 @@ ipmi_sel_get_info(struct ipmi_intf * intf)
 		req.msg.netfn = IPMI_NETFN_STORAGE;
 		req.msg.cmd = IPMI_CMD_GET_SEL_ALLOC_INFO;
 
+		uint8_t msg_data_ipmb2[4];
+		if (true == intf->target_addr_valid) {
+			msg_data_ipmb2[0] = (intf->target_addr << 1);
+			msg_data_ipmb2[3] = req.msg.cmd;
+			req.msg.netfn = IPMI_NETFN_LCR_PASSTHROUGH;
+			req.msg.cmd = IPMI_LCR_CMD_PASSTHROUGH;
+			msg_data_ipmb2[1] = IPMI_NETFN_STORAGE;
+			msg_data_ipmb2[2] = 0;
+			req.msg.data = msg_data_ipmb2;
+			req.msg.data_len = 4;
+		}
+		else {
+			msg_data_ipmb2[0] = 0x20; /* BMC ipmi address */
+		}
+
 		rsp = intf->sendrecv(intf, &req);
 		if (!rsp) {
 			lprintf(LOG_ERR,
@@ -1694,6 +1709,22 @@ ipmi_sel_get_std_entry(struct ipmi_intf * intf, uint16_t id,
 	req.msg.cmd = IPMI_CMD_GET_SEL_ENTRY;
 	req.msg.data = msg_data;
 	req.msg.data_len = 6;
+
+	uint8_t msg_data_ipmb[4 + req.msg.data_len];
+	if (true == intf->target_addr_valid) {
+		msg_data_ipmb[0] = (intf->target_addr << 1);
+		msg_data_ipmb[1] = IPMI_NETFN_STORAGE;
+		msg_data_ipmb[2] = 0;
+		msg_data_ipmb[3] = IPMI_CMD_GET_SEL_ENTRY;
+		memcpy(&msg_data_ipmb[4], &msg_data, sizeof(msg_data));
+		req.msg.netfn = IPMI_NETFN_LCR_PASSTHROUGH;
+		req.msg.cmd = IPMI_LCR_CMD_PASSTHROUGH;
+		req.msg.data = msg_data_ipmb;
+		req.msg.data_len = 4 + req.msg.data_len;
+	}
+	else {
+		msg_data_ipmb[0] = 0x20; /* BMC ipmi address */
+	}
 
 	rsp = intf->sendrecv(intf, &req);
 	if (!rsp) {
@@ -2314,6 +2345,27 @@ __ipmi_sel_savelist_entries(struct ipmi_intf * intf, int count, const char * sav
 	memset(&req, 0, sizeof(req));
 	req.msg.netfn = IPMI_NETFN_STORAGE;
 	req.msg.cmd = IPMI_CMD_GET_SEL_INFO;
+
+	/* if the user provided a target address
+	*  use the address
+	*  convert it into a ipmi address before sending it
+	* else use the address 0x40 (ShMC i2c address is 0x20 and
+	*  ipmi address is 0x40)
+	*/
+	uint8_t msg_data[4];
+	if (true == intf->target_addr_valid) {
+		msg_data[0] = (intf->target_addr << 1);
+		msg_data[3] = req.msg.cmd;
+		req.msg.netfn = IPMI_NETFN_LCR_PASSTHROUGH;
+		req.msg.cmd = IPMI_LCR_CMD_PASSTHROUGH;
+		msg_data[1] = IPMI_NETFN_STORAGE;
+		msg_data[2] = 0;
+		req.msg.data = msg_data;
+		req.msg.data_len = 4;
+	}
+	else {
+		msg_data[0] = 0x20; /* BMC ipmi address */
+	}
 
 	rsp = intf->sendrecv(intf, &req);
 	if (!rsp) {

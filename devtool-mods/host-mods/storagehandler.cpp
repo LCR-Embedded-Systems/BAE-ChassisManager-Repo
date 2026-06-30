@@ -721,6 +721,7 @@ ipmi::RspType<uint16_t // recordID of the Added SEL entry
 
 bool isFruPresent(ipmi::Context::ptr& ctx, const std::string& fruPath)
 {
+    log<level::INFO>("INFO: storagehandler isFruPresent enter ");
     using namespace ipmi::fru;
 
     std::string service;
@@ -881,6 +882,7 @@ ipmi::RspType<uint8_t,  // SDR version
 
 void register_netfn_storage_functions()
 {
+    log<level::INFO>("register_netfn_storage_functions enter");
     selCacheMapInitialized = false;
     initSELCache();
     // Handlers with dbus-sdr handler implementation.

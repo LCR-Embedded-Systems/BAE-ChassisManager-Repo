@@ -41,13 +41,13 @@ void CLI::build_gpio_list() {
     BP_GPIO_IN7 = populate_info(true, 0, 7, 0, std::string("BP_GPIO_IN7"));
 
     sysreset = populate_info(false, 1, 0, 0, std::string("sysreset"));
-    nvmro = populate_info(true, 2, 4, 0, std::string("nvmro"));
-    gdiscrete = populate_info(false, 2, 0, 0, std::string("gdiscrete"));
-    psenable = populate_info(false, 2, 3, 0, std::string("psenable"));
-    ps1inh = populate_info(false, 2, 2, 0, std::string("ps1inh"));
-    ps1fail = populate_info(true, 3, 0, 0, std::string("ps1fail")); //TODO find out
-    ps2inh = populate_info(false, 2, 1, 0, std::string("ps2inh"));
-    ps2fail = populate_info(true, 3, 1, 0, std::string("ps2fail")); //TODO find out
+    nvmro = populate_info(true, 2, 0, 0, std::string("nvmro"));
+    gdiscrete = populate_info(false, 3, 0, 0, std::string("gdiscrete"));
+    psenable = populate_info(false, 3, 3, 0, std::string("psenable"));
+    ps1inh = populate_info(false, 3, 2, 0, std::string("ps1inh"));
+    ps1fail = populate_info(true, 4, 0, 0, std::string("ps1fail"));
+    ps2inh = populate_info(false, 3, 1, 0, std::string("ps2inh"));
+    ps2fail = populate_info(true, 4, 1, 0, std::string("ps2fail"));
 
     available_gpios.push_back(BP_GPIO_OUT0);
     available_gpios.push_back(BP_GPIO_OUT1);
@@ -266,7 +266,7 @@ int CLI::setdbusgpio(gpio_info* target_gpio, int value)
         std::string path = "/xyz/openbmc_project/gpio/" + name;
         std::string interface = "xyz.openbmc_project.Sensor.Value";
         std::string property = "Value";
-        phosphor::interface::util::setProperty<double>(bus, path, interface, property, std::move((double)value));
+        phosphor::interface::util::setProperty<int>(bus, path, interface, property, std::move(value));
         
         // Open the GPIO chip
         gpiod::chip chip("gpiochip" + std::to_string(target_gpio->chip));
@@ -336,10 +336,10 @@ int CLI::readdbusgpio(gpio_info* target_gpio) {
         std::string path = "/xyz/openbmc_project/gpio/" + name;
         std::string interface = "xyz.openbmc_project.Sensor.Value";
         std::string property = "Value";
-        double value = phosphor::interface::util::getProperty<double>(bus, path, interface, property);
+        int value = phosphor::interface::util::getProperty<int>(bus, path, interface, property);
         
         // Update status
-        target_gpio->status = (int)value;
+        target_gpio->status = value;
         
         return value;
         

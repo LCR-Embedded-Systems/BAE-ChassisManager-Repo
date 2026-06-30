@@ -1,0 +1,11 @@
+[Unit]
+Description=LCR PAYLOAD TEST
+After=systemd-journald.service
+
+[Service]
+ExecStart=/usr/bin/payloadtest
+Restart=always
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

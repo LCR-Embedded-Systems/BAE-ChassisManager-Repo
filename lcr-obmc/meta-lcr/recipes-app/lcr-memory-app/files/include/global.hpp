@@ -31,8 +31,6 @@
 #include <iostream>
 
 
-extern std::ofstream temp_dbgFile;
-
 std::string currentTimestamp();
 bool isValidDirectory(const std::string& directory);
 

@@ -27,6 +27,10 @@
 #include <sdbusplus/bus/match.hpp>
 #include <sdbusplus/message.hpp>
 #include <xyz/openbmc_project/Common/error.hpp>
+#include <sdbusplus/asio/connection.hpp>
+#include <sdbusplus/asio/object_server.hpp>
+#include <boost/asio.hpp>
+#include <boost/asio/steady_timer.hpp>
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <gpiod.hpp>
@@ -323,6 +327,107 @@ static void setProperty(sdbusplus::bus_t& bus, const std::string& path,
                                 interface, property};
     }
 }
+
+
+using SubTree = std::map<std::string, std::map<std::string, std::vector<std::string>>>;
+
+template <typename T>
+inline void async_get_dbus_property(std::shared_ptr<sdbusplus::asio::connection> conn,
+                             const std::string& service,
+                             const std::string& path,
+                             const std::string& iface,
+                             const std::string& property,
+                             std::function<void(T)> callback) {
+    conn->async_method_call(
+        [callback](const boost::system::error_code ec, sdbusplus::message::message& m) {
+            if (ec) {
+                callback(T{});
+                return;
+            }
+            std::variant<T> var;
+            m.read(var);
+            callback(std::get<T>(var));
+        },
+        service, path, "org.freedesktop.DBus.Properties", "Get", iface, property);
+}
+
+inline void async_get_subtree(std::shared_ptr<sdbusplus::asio::connection> conn,
+                       const std::string& path,
+                       int32_t depth,
+                       const std::vector<std::string>& interfaces,
+                       std::function<void(SubTree)> callback) {
+    conn->async_method_call(
+        [callback](const boost::system::error_code ec, sdbusplus::message::message& m) {
+            if (ec) {
+                callback({});
+                return;
+            }
+            SubTree tree;
+            m.read(tree);
+            callback(tree);
+        },
+        "xyz.openbmc_project.ObjectMapper", "/xyz/openbmc_project/object_mapper",
+        "xyz.openbmc_project.ObjectMapper", "GetSubTree", path, depth, interfaces);
+}
+
+inline void async_alarm_check(std::shared_ptr<sdbusplus::asio::connection> conn,
+                       const std::string& stub,
+                       const std::string& interface,
+                       int depth,
+                       std::function<void(bool)> callback) {
+    async_get_subtree(conn, stub, depth, {interface},
+        [conn, callback, interface](const SubTree& tree) {
+            if (tree.empty()) {
+                callback(false);
+                return;
+            }
+
+            // Extract paths and services (assume first service per path)
+            std::vector<std::pair<std::string, std::string>> items;
+            for (const auto& [p, s_map] : tree) {
+                if (!s_map.empty()) {
+                    items.emplace_back(p, s_map.begin()->first);
+                }
+            }
+            if (items.empty()) {
+                callback(false);
+                return;
+            }
+
+            // Chain checks over items, short-circuit on first alarm
+            auto idx = std::make_shared<size_t>(0);
+            auto check_next_ptr = std::make_shared<std::function<void()> >();
+            *check_next_ptr = [conn, items, idx, interface, callback, check_next_ptr]() mutable {
+                if (*idx >= items.size()) {
+                    callback(false);
+                    return;
+                }
+                auto [path, service] = items[*idx];
+                ++(*idx);
+
+                // Get CriticalAlarmLow
+                async_get_dbus_property<bool>(conn, service, path, interface, "CriticalAlarmLow",
+                    [conn, items, idx, interface, callback, path, service, check_next_ptr](bool val) {
+                        if (val) {
+                            callback(true);
+                            return;
+                        }
+                        // Get CriticalAlarmHigh
+                        async_get_dbus_property<bool>(conn, service, path, interface, "CriticalAlarmHigh",
+                            [callback, check_next_ptr](bool val) {
+                                if (val) {
+                                    callback(true);
+                                    return;
+                                }
+                                (*check_next_ptr)();
+                            });
+                    });
+            };
+            (*check_next_ptr)();
+        });
+}
+
+
 
 }
 }

@@ -21,6 +21,23 @@ using AssociationIface = sdbusplus::xyz::openbmc_project::Association::server::D
 using ObjectManagerIface = sdbusplus::server::manager_t;
 using ThresholdIface = sdbusplus::xyz::openbmc_project::Sensor::Threshold::server::Critical;
 
+static constexpr size_t thresholdTypeCodes = 0;
+
+enum class ThresholdTypeCodes : uint8_t
+{
+    lnc_low  = 0x00,
+    lnc_high = 0x01,
+    lcr_low  = 0x02,
+    lcr_high = 0x03,
+    lnr_low  = 0x04,
+    lnr_high = 0x05,
+    unc_low  = 0x06,
+    unc_high = 0x07,
+    ucr_low  = 0x08,
+    ucr_high = 0x09,
+    unr_low  = 0x0A,
+    unr_high = 0x0B
+};
 
 struct directoryContents {
     std::string reading_path;
@@ -36,18 +53,17 @@ struct directoryVals {
 
 struct sensorElement {
     std::string dirName;
+    std::string sensorName;
     std::string directory;
     std::string directory_path;
+    bool first;
     directoryContents conts;
     directoryVals vals;
 };
 
-
-
-
 class Temp_Sensor {
     public: 
-        Temp_Sensor();
+        Temp_Sensor(std::shared_ptr<sdbusplus::asio::connection> conn_ref, sdbusplus::asio::object_server& server_ref);
         ~Temp_Sensor();
 
         Temp_Sensor(const Temp_Sensor&) = delete;
@@ -56,27 +72,28 @@ class Temp_Sensor {
         Temp_Sensor(Temp_Sensor&&) = default;
         Temp_Sensor& operator=(Temp_Sensor&&) = default;
 
-        int update_reading();
-        int get_reading(sensorElement sensor);
-        int expose_reading(const std::string& name);
-        int get_file_conts();
-        std::string get_directory();
-        void send_reading(sensorElement s);
-        void send_all_readings();
         std::vector<std::string> explore_dir();
-
-        std::vector<sensorElement> sensorItems;
-
+        int get_file_conts();
         nlohmann::json readJson(std::string path);
+        
+        void expose_reading(const sensorElement& tempS);
+        void update_reading();
+        void async_readtemp(const std::string& temp_name, std::function<void(double, double)> callback);
+        void async_update_bus(const std::string& dirName, double old_val, double new_val);
+        void sendPlatformEvent(const std::string& dirName, bool assertEvent, uint8_t eventData1, std::optional<uint8_t> eventData2, std::optional<uint8_t> eventData3);
 
+        void schedule_update();
+        
     private:
-        // Persistent D-Bus bus
-        sdbusplus::bus::bus bus;
-
-        // Map of sensors
-        std::map<std::string, std::unique_ptr<sdbusplus::server::object_t<ValueIface, AssociationIface, ThresholdIface>>> sensors;
-
-        std::unique_ptr<ObjectManagerIface> object_manager;
+        std::shared_ptr<sdbusplus::asio::connection> conn;
+        sdbusplus::asio::object_server& obj_server;
+        std::map<std::string, std::unique_ptr<sdbusplus::asio::dbus_interface>> m_value_iface;
+        std::map<std::string, std::unique_ptr<sdbusplus::asio::dbus_interface>> m_assoc_iface;
+        std::map<std::string, std::unique_ptr<sdbusplus::asio::dbus_interface>> m_crit_thres_iface;
+        std::map<std::string, std::unique_ptr<sdbusplus::asio::dbus_interface>> m_warn_thres_iface;
+        boost::asio::steady_timer timer;
+        std::unordered_map<std::string, sensorElement> sensorItems;
 
         nlohmann::json limitJson;
+        nlohmann::json configJson;
 };

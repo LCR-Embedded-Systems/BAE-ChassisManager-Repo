@@ -3,13 +3,18 @@
 
 int main()
 {
-    GpioMonitor monitor;
-    double ts = monitor.get_ts();
-    int tsint = (int)(ts * 1000);
-    while (true) {
-        monitor.run_monitor();
-        std::this_thread::sleep_for(std::chrono::milliseconds(tsint));
-    }
+    boost::asio::io_context io;
+    auto bus = std::make_shared<sdbusplus::asio::connection>(io);
+
+    bus->request_name("xyz.openbmc_project.GPIOMon");
+
+    sdbusplus::asio::object_server obj_server(bus);
+
+    GpioMonitor monitor(bus, obj_server);
+
+    monitor.schedule_update();
+
+    io.run();
     
     return 0;
 }

@@ -1,0 +1,15 @@
+{
+    "Chassis_IPMB_Description_Record" : {
+        "Record_Type_ID" : 192,
+        "End_of_List" : 130,
+        "Record_Length" : 11,
+        "Record_Checksum" : 0,
+        "Header_Checksum" : 0,
+        "Manufacturer_ID_1" : 0,
+        "Manufacturer_ID_2" : 129,
+        "Manufacturer_ID_3" : 172,
+        "Vita_Record_ID" : 48,
+        "Record_Format_Version" : 0,
+        "IPMB_Support" : 23
+    }
+}

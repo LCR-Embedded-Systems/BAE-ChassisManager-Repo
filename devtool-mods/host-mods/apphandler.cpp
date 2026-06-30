@@ -1715,6 +1715,7 @@ ipmi::RspType<std::vector<uint8_t>>
 
 void register_netfn_app_functions()
 {
+    log<level::INFO>("register_netfn_app_functions enter");
     // <Get Device ID>
     ipmi::registerHandler(ipmi::prioOpenBmcBase, ipmi::netFnApp,
                           ipmi::app::cmdGetDeviceId, ipmi::Privilege::User,

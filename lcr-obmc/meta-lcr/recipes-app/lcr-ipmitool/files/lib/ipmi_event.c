@@ -122,6 +122,28 @@ ipmi_send_platform_event(struct ipmi_intf * intf, struct platform_event_msg * em
 
 	ipmi_event_msg_print(intf, emsg);
 
+	/* if the user provided a target address
+	*  use the address
+	*  convert it into a ipmi address before sending it
+	* else use the address 0x20 (ShMC i2c address is 0x20 and
+	*  ipmi address is 0x20)
+	*/
+	uint8_t msg_data_ipmb[4 + req.msg.data_len];
+	if (true == intf->target_addr_valid) {
+		msg_data_ipmb[0] = (intf->target_addr << 1);
+		msg_data_ipmb[1] = IPMI_NETFN_SE;
+		msg_data_ipmb[2] = 0;
+		msg_data_ipmb[3] = IPMI_CMD_PLATFORM_EVENT;
+		memcpy(&msg_data_ipmb[4], &req.msg.data, sizeof(req.msg.data));
+		req.msg.netfn = IPMI_NETFN_LCR_PASSTHROUGH;
+		req.msg.cmd = IPMI_LCR_CMD_PASSTHROUGH;
+		req.msg.data = msg_data_ipmb;
+		req.msg.data_len = 4 + req.msg.data_len;
+	}
+	else {
+		msg_data_ipmb[0] = 0x20; /* BMC ipmi address */
+	}
+
 	rsp = intf->sendrecv(intf, &req);
 	if (!rsp) {
 		lprintf(LOG_ERR, "Platform Event Message command failed");

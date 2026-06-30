@@ -30,7 +30,10 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <gpiod.hpp>
-
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <mtd/mtd-user.h>
+#include <cstring>
 
 extern std::ofstream boot_dbgfile;
 extern std::ofstream system_logs;

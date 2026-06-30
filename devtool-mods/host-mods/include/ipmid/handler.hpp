@@ -281,8 +281,7 @@ class IpmiHandler final : public HandlerBase
         catch (const std::exception& e)
         {
             phosphor::logging::log<phosphor::logging::level::ERR>(
-                "Handler failed to catch exception",
-                phosphor::logging::entry("EXCEPTION=%s", e.what()),
+                ("Handler failed to catch exception EXCEPTION=" +  std::string(e.what())).c_str(),
                 phosphor::logging::entry("NETFN=%x", request->ctx->netFn),
                 phosphor::logging::entry("CMD=%x", request->ctx->cmd));
             return errorResponse(request, ccUnspecifiedError);
@@ -295,9 +294,7 @@ class IpmiHandler final : public HandlerBase
         {
             const char* what = currentExceptionType();
             phosphor::logging::log<phosphor::logging::level::ERR>(
-                "Handler failed to catch exception",
-                phosphor::logging::entry("EXCEPTION=%s", what),
-                phosphor::logging::entry("NETFN=%x", request->ctx->netFn),
+                ("Handler failed to catch exception EXCEPTION=" + std::string(what) + " NETFN=" + std::to_string(request->ctx->netFn)).c_str(),
                 phosphor::logging::entry("CMD=%x", request->ctx->cmd));
             return errorResponse(request, ccUnspecifiedError);
         }
@@ -397,7 +394,7 @@ class IpmiHandler<ipmid_callback_t> final : public HandlerBase
         {
             const char* what = currentExceptionType();
             phosphor::logging::log<phosphor::logging::level::ERR>(
-                "Handler failed to catch exception",
+                ("Handler failed to catch exception EXCEPTION=" +  std::string(what)).c_str(),
                 phosphor::logging::entry("EXCEPTION=%s", what),
                 phosphor::logging::entry("NETFN=%x", request->ctx->netFn),
                 phosphor::logging::entry("CMD=%x", request->ctx->cmd));
@@ -489,7 +486,7 @@ class IpmiHandler<oem::Handler> final : public HandlerBase
         {
             const char* what = currentExceptionType();
             phosphor::logging::log<phosphor::logging::level::ERR>(
-                "Handler failed to catch exception",
+                ("Handler failed to catch exception EXCEPTION=" +  std::string(what)).c_str(),
                 phosphor::logging::entry("EXCEPTION=%s", what),
                 phosphor::logging::entry("NETFN=%x", request->ctx->netFn),
                 phosphor::logging::entry("CMD=%x", request->ctx->cmd));

@@ -655,8 +655,8 @@ ipmi_sdr_get_sensor_thresholds(struct ipmi_intf *intf, uint8_t sensor,
 	/* if the user provided a target address
 	*  use the address
 	*  convert it into a ipmi address before sending it
-	* else use the address 0x40 (ShMC i2c address is 0x20 and
-	*  ipmi address is 0x40)
+	* else use the address 0x20 (ShMC i2c address is 0x20 and
+	*  ipmi address is 0x20)
 	*/
 	uint8_t msg_data_ipmb[4 + sizeof (req.msg.data)];
 	if (true == intf->target_addr_valid) {
@@ -672,7 +672,7 @@ ipmi_sdr_get_sensor_thresholds(struct ipmi_intf *intf, uint8_t sensor,
 		req.msg.data_len = sizeof (req.msg.data);
 	}
 	else {
-		msg_data_ipmb[0] = 0x40; /* BMC ipmi address */
+		msg_data_ipmb[0] = 0x20; /* BMC ipmi address */
 	}
 
 	rsp = intf->sendrecv(intf, &req);
@@ -726,8 +726,8 @@ ipmi_sdr_get_sensor_hysteresis(struct ipmi_intf *intf, uint8_t sensor,
 	/* if the user provided a target address
 	*  use the address
 	*  convert it into a ipmi address before sending it
-	* else use the address 0x40 (ShMC i2c address is 0x20 and
-	*  ipmi address is 0x40)
+	* else use the address 0x20 (ShMC i2c address is 0x20 and
+	*  ipmi address is 0x20)
 	*/
 	uint8_t msg_data_ipmb[4 + sizeof (req.msg.data)];
 	if (true == intf->target_addr_valid) {
@@ -743,7 +743,7 @@ ipmi_sdr_get_sensor_hysteresis(struct ipmi_intf *intf, uint8_t sensor,
 		req.msg.data_len = sizeof (req.msg.data);
 	}
 	else {
-		msg_data_ipmb[0] = 0x40; /* BMC ipmi address */
+		msg_data_ipmb[0] = 0x20; /* BMC ipmi address */
 	}
 
 	rsp = intf->sendrecv(intf, &req);
@@ -776,8 +776,8 @@ ipmi_sdr_get_sensor_reading(struct ipmi_intf *intf, uint8_t sensor)
 	/* if the user provided a target address
 	*  use the address
 	*  convert it into a ipmi address before sending it
-	* else use the address 0x40 (ShMC i2c address is 0x20 and
-	*  ipmi address is 0x40)
+	* else use the address 0x20 (ShMC i2c address is 0x20 and
+	*  ipmi address is 0x20)
 	*/
 	uint8_t msg_data_ipmb[4 + sizeof (req.msg.data)];
 	if (true == intf->target_addr_valid) {
@@ -793,7 +793,7 @@ ipmi_sdr_get_sensor_reading(struct ipmi_intf *intf, uint8_t sensor)
 		req.msg.data_len = sizeof (req.msg.data);
 	}
 	else {
-		msg_data_ipmb[0] = 0x40; /* BMC ipmi address */
+		msg_data_ipmb[0] = 0x20; /* BMC ipmi address */
 	}
 
 	return intf->sendrecv(intf, &req);
@@ -846,8 +846,8 @@ ipmi_sdr_get_sensor_reading_ipmb(struct ipmi_intf *intf, uint8_t sensor,
 	/* if the user provided a target address
 	*  use the address
 	*  convert it into a ipmi address before sending it
-	* else use the address 0x40 (ShMC i2c address is 0x20 and
-	*  ipmi address is 0x40)
+	* else use the address 0x20 (ShMC i2c address is 0x20 and
+	*  ipmi address is 0x20)
 	*/
 	uint8_t msg_data_ipmb[5];
 	if (true == intf->target_addr_valid) {
@@ -863,7 +863,7 @@ ipmi_sdr_get_sensor_reading_ipmb(struct ipmi_intf *intf, uint8_t sensor,
 		req.msg.data_len = sizeof(msg_data_ipmb);
 	}
 	else {
-		msg_data_ipmb[0] = 0x40; /* BMC ipmi address */
+		msg_data_ipmb[0] = 0x20; /* BMC ipmi address */
 	}
 
 	// printf("NETFN 0x%02x ", req.msg.netfn);
@@ -1079,8 +1079,8 @@ ipmi_sdr_get_header(struct ipmi_intf *intf, struct ipmi_sdr_iterator *itr)
 		/* if the user provided a target address
 		*  use the address
 		*  convert it into a ipmi address before sending it
-		* else use the address 0x40 (ShMC i2c address is 0x20 and
-		*  ipmi address is 0x40)
+		* else use the address 0x20 (ShMC i2c address is 0x20 and
+		*  ipmi address is 0x20)
 		*/
 		uint8_t msg_data_ipmb[4 + sizeof (sdr_rq)];
 		if (true == intf->target_addr_valid) {
@@ -1097,7 +1097,7 @@ ipmi_sdr_get_header(struct ipmi_intf *intf, struct ipmi_sdr_iterator *itr)
 			req.msg.data_len = 4 + sizeof (sdr_rq);
 		}
 		else {
-			msg_data_ipmb[0] = 0x40; /* BMC ipmi address */
+			msg_data_ipmb[0] = 0x20; /* BMC ipmi address */
 		}
 
 		// printf("req.msg.data[] = ");
@@ -1124,9 +1124,9 @@ ipmi_sdr_get_header(struct ipmi_intf *intf, struct ipmi_sdr_iterator *itr)
 				return NULL;
 			}
 		} else if (rsp->ccode) {
-			lprintf(LOG_ERR, "Get SDR %04x command failed: %s",
+			/*lprintf(LOG_ERR, "Get SDR %04x command failed: %s",
 				itr->next, val2str(rsp->ccode,
-						   completion_code_vals));
+						   completion_code_vals));*/
 			continue;
 		} else {
 			break;
@@ -3087,7 +3087,7 @@ ipmi_sdr_get_reservation(struct ipmi_intf *intf, int use_builtin,
 		req.msg.data_len = 4;
 	}
 	else {
-		msg_data_ipmb[0] = 0x40; /* BMC ipmi address */
+		msg_data_ipmb[0] = 0x20; /* BMC ipmi address */
 	}
 
 	rsp = intf->sendrecv(intf, &req);
@@ -3145,7 +3145,7 @@ ipmi_sdr_start(struct ipmi_intf *intf, int use_builtin)
 		req.msg.data_len = 4;
 	}
 	else {
-		msg_data_ipmb[0] = 0x40; /* BMC ipmi address */
+		msg_data_ipmb[0] = 0x20; /* BMC ipmi address */
 	}
 
 	rsp = intf->sendrecv(intf, &req);
@@ -3173,7 +3173,7 @@ ipmi_sdr_start(struct ipmi_intf *intf, int use_builtin)
 				lprintf(LOG_DEBUG, "Using Device SDRs\n");
 				use_built_in = 1;
 			} else {
-				lprintf(LOG_ERR, "Error obtaining SDR info");
+				lprintf(LOG_ERR, "dev id no additional device support, Error obtaining SDR info");
 				free(itr);
 				itr = NULL;
 				return NULL;
@@ -3203,18 +3203,18 @@ ipmi_sdr_start(struct ipmi_intf *intf, int use_builtin)
 			req.msg.data_len = 4;
 		}
 		else {
-			msg_data_ipmb[0] = 0x40; /* BMC ipmi address */
+			msg_data_ipmb[0] = 0x20; /* BMC ipmi address */
 		}
 
 		rsp = intf->sendrecv(intf, &req);
 		if (!rsp) {
-			lprintf(LOG_ERR, "Error obtaining SDR info");
+			lprintf(LOG_ERR, "no response, Error obtaining SDR info");
 			free(itr);
 			itr = NULL;
 			return NULL;
 		}
 		if (rsp->ccode) {
-			lprintf(LOG_ERR, "Error obtaining SDR info: %s",
+			lprintf(LOG_ERR, "bad ccode, Error obtaining SDR info: %s",
 				val2str(rsp->ccode, completion_code_vals));
 			free(itr);
 			itr = NULL;
@@ -3268,7 +3268,7 @@ ipmi_sdr_start(struct ipmi_intf *intf, int use_builtin)
 			req.msg.data_len = 4;
 		}
 		else {
-			msg_data_ipmb[0] = 0x40; /* BMC ipmi address */
+			msg_data_ipmb[0] = 0x20; /* BMC ipmi address */
 		}
 
 		rsp = intf->sendrecv(intf, &req);
@@ -3372,8 +3372,8 @@ ipmi_sdr_get_record(struct ipmi_intf * intf, struct sdr_get_rs * header,
 		/* if the user provided a target address
 		*  use the address
 		*  convert it into a ipmi address before sending it
-		* else use the address 0x40 (ShMC i2c address is 0x20 and
-		*  ipmi address is 0x40)
+		* else use the address 0x20 (ShMC i2c address is 0x10 and
+		*  ipmi address is 0x20)
 		*/
 		uint8_t msg_data_ipmb[4 + sizeof (sdr_rq)];
 		if (true == intf->target_addr_valid) {
@@ -3390,7 +3390,7 @@ ipmi_sdr_get_record(struct ipmi_intf * intf, struct sdr_get_rs * header,
 			req.msg.data_len = 4 + sizeof (sdr_rq);
 		}
 		else {
-			msg_data_ipmb[0] = 0x40; /* BMC ipmi address */
+			msg_data_ipmb[0] = 0x20; /* BMC ipmi address */
 		}
 
 		// printf("req.msg.data[] = ");
@@ -4581,7 +4581,7 @@ ipmi_sdr_get_info(struct ipmi_intf *intf,
 		req.msg.data_len = 4;
 	}
 	else {
-		msg_data_ipmb[0] = 0x40; /* BMC ipmi address */
+		msg_data_ipmb[0] = 0x20; /* BMC ipmi address */
 	}
 
 

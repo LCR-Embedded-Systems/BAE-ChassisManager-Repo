@@ -13,7 +13,7 @@ S = "${WORKDIR}"
 
 inherit pkgconfig systemd
 
-DEPENDS += "sdbusplus phosphor-dbus-interfaces systemd phosphor-logging fmt nlohmann-json libgpiod"
+DEPENDS += "sdbusplus phosphor-dbus-interfaces systemd phosphor-logging fmt nlohmann-json libgpiod mtd-utils"
 
 do_compile() {
     ${CXX} ${CXXFLAGS} -std=c++20 \

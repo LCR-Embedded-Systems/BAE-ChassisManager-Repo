@@ -33,6 +33,7 @@ ServicePath getServiceAndPath(sdbusplus::bus_t& bus,
                               const std::string& interface,
                               const std::string& path)
 {
+    log<level::INFO>("INFO: sensordatahandler getServiceAndPath enter ");
     auto depth = 0;
     auto mapperCall = bus.new_method_call(MAPPER_BUSNAME, MAPPER_PATH,
                                           MAPPER_INTERFACE, "GetSubTree");
@@ -128,6 +129,7 @@ GetSensorResponse mapDbusToAssertion(const Info& sensorInfo,
                                      const InstancePath& path,
                                      const DbusInterface& interface)
 {
+    log<level::INFO>("INFO: sensordatahandler mapDbusToAssertion enter ");
     sdbusplus::bus_t bus{ipmid_get_sd_bus_connection()};
     GetSensorResponse response{};
 
@@ -160,6 +162,7 @@ GetSensorResponse mapDbusToAssertion(const Info& sensorInfo,
 
 GetSensorResponse mapDbusToEventdata2(const Info& sensorInfo)
 {
+    log<level::INFO>("INFO: sensordatahandler mapDbusToAssertion2 enter ");
     sdbusplus::bus_t bus{ipmid_get_sd_bus_connection()};
     GetSensorResponse response{};
 
@@ -247,6 +250,7 @@ IpmiUpdateData makeDbusMsg(const std::string& updateInterface,
                            const std::string& command,
                            const std::string& sensorInterface)
 {
+    log<level::INFO>("INFO: sensordatahandler makeDbusMsg enter ");
     sdbusplus::bus_t bus{ipmid_get_sd_bus_connection()};
     using namespace std::string_literals;
 
@@ -339,6 +343,7 @@ IpmiUpdateData makeDbusMsg(const std::string& updateInterface,
                            const std::string&, const std::string& command,
                            const std::string&)
 {
+    log<level::INFO>("INFO: sensordatahandler makeDbusMsg (notify) enter ");
     sdbusplus::bus_t bus{ipmid_get_sd_bus_connection()};
     using namespace std::string_literals;
 

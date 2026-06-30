@@ -13,6 +13,9 @@ int main(int argc, char* argv[])
         std::cout << "\ttemperature: display all temperatures and threshold statuses" << std::endl;
         std::cout << "\tfans: display all fans and threshold statuses" << std::endl;
         std::cout << "\tvoltage: display all voltage readings and threshold statuses" << std::endl;
+        std::cout << "\tcurrent: display all current readings and threshold statuses" << std::endl;
+        std::cout << "\tpower: display all power readings and threshold statuses" << std::endl;
+        std::cout << "\tservices: display all ChM services and their status" << std::endl;
         std::cout << "\talarms: display all alarm statuses and their thresholds" << std::endl;
         std::cout << "\tall: display all available information" << std::endl;
         std::cout << "\tset: set the thresholds for the alarms" << std::endl;

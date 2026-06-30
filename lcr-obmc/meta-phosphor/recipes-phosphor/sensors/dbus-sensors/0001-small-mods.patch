@@ -1,0 +1,157 @@
+From 28eaf1dc37bb488607822d216235a3592ca73d81 Mon Sep 17 00:00:00 2001
+From: jswiftlcr714 <jswift@lcrembedded.com>
+Date: Tue, 3 Mar 2026 13:27:20 -0500
+Subject: [PATCH] small mods
+
+---
+ service_files/meson.build |  7 -------
+ src/FanMain.cpp           | 29 ++++++++++++++++++++++++++---
+ src/Utils.hpp             |  6 ++++++
+ 3 files changed, 32 insertions(+), 10 deletions(-)
+
+diff --git a/service_files/meson.build b/service_files/meson.build
+index 5f5b78c..228b3a0 100644
+--- a/service_files/meson.build
++++ b/service_files/meson.build
+@@ -1,15 +1,8 @@
+ unit_files = [
+-    ['adc', 'xyz.openbmc_project.adcsensor.service'],
+-    ['intel-cpu', 'xyz.openbmc_project.intelcpusensor.service'],
+-    ['exit-air', 'xyz.openbmc_project.exitairsensor.service'],
+     ['fan', 'xyz.openbmc_project.fansensor.service'],
+-    ['hwmon-temp', 'xyz.openbmc_project.hwmontempsensor.service'],
+     ['ipmb', 'xyz.openbmc_project.ipmbsensor.service'],
+     ['intrusion', 'xyz.openbmc_project.intrusionsensor.service'],
+-    ['mcu', 'xyz.openbmc_project.mcutempsensor.service'],
+     ['nvme', 'xyz.openbmc_project.nvmesensor.service'],
+-    ['psu', 'xyz.openbmc_project.psusensor.service'],
+-    ['external', 'xyz.openbmc_project.externalsensor.service'],
+ ]
+ 
+ foreach tuple : unit_files
+diff --git a/src/FanMain.cpp b/src/FanMain.cpp
+index 32022c1..bb28ed2 100644
+--- a/src/FanMain.cpp
++++ b/src/FanMain.cpp
+@@ -260,10 +260,15 @@ void createSensors(
+         sensorsChanged,
+     size_t retries = 0)
+ {
++    std::cerr << "createSensors enter "
++                          << "\n";
+     auto getter = std::make_shared<GetSensorConfiguration>(
+         dbusConnection,
+         [&io, &objectServer, &tachSensors, &pwmSensors, &dbusConnection,
+          sensorsChanged](const ManagedObjectType& sensorConfigurations) {
++        
++        std::cerr << "createSensors getter enter "
++                          << "\n";
+         bool firstScan = sensorsChanged == nullptr;
+         std::vector<fs::path> paths;
+         if (!findFiles(fs::path("/sys/class/hwmon"), R"(fan\d+_input)", paths))
+@@ -271,11 +276,14 @@ void createSensors(
+             std::cerr << "No fan sensors in system\n";
+             return;
+         }
+-
++        std::cerr << "createSensors fan sensors found"
++                          << "\n";
+         // iterate through all found fan sensors, and try to match them with
+         // configuration
+         for (const auto& path : paths)
+         {
++            std::cerr << "createSensors path " << path << " being explored"
++                          << "\n";
+             std::smatch match;
+             std::string pathStr = path.string();
+ 
+@@ -293,20 +301,29 @@ void createSensors(
+             const SensorData* sensorData = nullptr;
+             const std::string* interfacePath = nullptr;
+             const SensorBaseConfiguration* baseConfiguration = nullptr;
++            std::cerr << "createSensors entering sensorConfigurations for loop now"
++                          << "\n";
+             for (const auto& [path, cfgData] : sensorConfigurations)
+             {
+                 // find the base of the configuration to see if indexes
+                 // match
++                std::cerr << "createSensors sensor base find now"
++                          << "\n";
+                 auto sensorBaseFind = cfgData.find(cfgIntf);
+                 if (sensorBaseFind == cfgData.end())
+                 {
+                     continue;
+                 }
+-
++                
+                 baseConfiguration = &(*sensorBaseFind);
++
++                std::cerr << "createSensors unreferenced sensorBaseFind" << baseConfiguration->first
++                          << "\n";
++
+                 interfacePath = &path.str;
+                 baseType = sensorTypes[fanType];
+-
++                std::cerr << "createSensors interface path: " << path.str << " and baseType " << baseType
++                          << "\n";
+                 auto findIndex = baseConfiguration->second.find("Index");
+                 if (findIndex == baseConfiguration->second.end())
+                 {
+@@ -329,6 +346,10 @@ void createSensors(
+                 }
+                 if (fanType == FanTypes::i2c)
+                 {
++
++                    std::cerr << "createSensors currently in fantype = i2c if statement"
++                          << "\n";
++
+                     size_t bus = 0;
+                     size_t address = 0;
+ 
+@@ -366,6 +387,7 @@ void createSensors(
+                     }
+                 }
+             }
++            
+             if (sensorData == nullptr)
+             {
+                 std::cerr << "failed to find match for " << path.string()
+@@ -565,6 +587,7 @@ void createSensors(
+ 
+ int main()
+ {
++    
+     boost::asio::io_context io;
+     auto systemBus = std::make_shared<sdbusplus::asio::connection>(io);
+     sdbusplus::asio::object_server objectServer(systemBus, true);
+diff --git a/src/Utils.hpp b/src/Utils.hpp
+index 444030c..cf85b9c 100644
+--- a/src/Utils.hpp
++++ b/src/Utils.hpp
+@@ -302,6 +302,8 @@ struct GetSensorConfiguration :
+     void getConfiguration(const std::vector<std::string>& types,
+                           size_t retries = 0)
+     {
++        std::cerr << "getConfiguration enter"
++                          << "\n";
+         if (retries > 5)
+         {
+             retries = 5;
+@@ -310,6 +312,8 @@ struct GetSensorConfiguration :
+         std::vector<std::string> interfaces(types.size());
+         for (const auto& type : types)
+         {
++            std::cerr << "getConfiguration type: " << type
++            << "\n";
+             interfaces.push_back(configInterfaceName(type));
+         }
+ 
+@@ -349,6 +353,8 @@ struct GetSensorConfiguration :
+ 
+                 for (const std::string& interface : objDict.begin()->second)
+                 {
++                    std::cerr << "getConfiguration for loop for interface: " << interface
++                    << "\n";
+                     // anything that starts with a requested configuration
+                     // is good
+                     if (std::find_if(interfaces.begin(), interfaces.end(),

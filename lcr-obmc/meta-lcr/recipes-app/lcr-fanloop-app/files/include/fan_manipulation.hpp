@@ -33,7 +33,7 @@ struct temperature_sensor {
 struct fan {
     std::string path;
     std::string name;
-    int pwm;
+    uint64_t pwm;
     int tach;
 };
 
@@ -50,7 +50,6 @@ class fan_loop
 
         int read_temperatures();
         int get_fan_pwms();
-        int get_temp_thresholds();
         void initialize_temps();
 
         void initialize_controller();
@@ -61,19 +60,20 @@ class fan_loop
 
         double get_ts();
 
+        double getcalcval();
+
     private:
 
         bool linear;
 
         double ts;
 
-        double temp_min;
-        double temp_max;
-        double setpoint;
+        int numfans;
         
         std::vector<std::unique_ptr<temperature_sensor>> temps;
         std::vector<std::unique_ptr<fan>> fans;
         std::vector<std::string> pwm_paths;
+        std::vector<std::string> temp_names;
 
         std::map<temp_name, fan> temp_fan_map;
 

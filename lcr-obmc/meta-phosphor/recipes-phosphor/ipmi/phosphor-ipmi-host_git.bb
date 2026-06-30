@@ -101,6 +101,7 @@ SRC_URI += "file://merge_yamls.py \
 HOSTIPMI_PROVIDER_LIBRARY += "libipmi20.so"
 HOSTIPMI_PROVIDER_LIBRARY += "libsysintfcmds.so"
 HOSTIPMI_PROVIDER_LIBRARY += "libusercmds.so"
+HOSTIPMI_PROVIDER_LIBRARY += "libdynamiccmds.so"
 
 NETIPMI_PROVIDER_LIBRARY += "libipmi20.so"
 NETIPMI_PROVIDER_LIBRARY += "libusercmds.so"

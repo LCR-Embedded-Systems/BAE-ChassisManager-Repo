@@ -357,8 +357,25 @@ void IpmbChannel::processI2cEvent()
     lseek(ipmbi2cSlaveFd, 0, SEEK_SET);
     ssize_t r = read(ipmbi2cSlaveFd, buffer.data(), ipmbMaxFrameLength);
 
-    // std::string logMsg2 = "processI2cEvent: this is the response slave address: " + std::to_string(ipmbFrame->Header.Resp.rsSA);
+    // std::string logMsg2 = "processI2cEvent: this is the response address: " + std::to_string(ipmbFrame->Header.Resp.rsSA);
     // phosphor::logging::log<phosphor::logging::level::INFO>(logMsg2.c_str());
+
+    if (r > 0)
+    {
+        std::string hexDump = "processI2cEvent: response address " + std::to_string(ipmbFrame->Header.Resp.rsSA) + " and raw bytes read (" + std::to_string(r) + " bytes):";
+        for (ssize_t i = 0; i < r; ++i)
+        {
+            char byteStr[8];
+            snprintf(byteStr, sizeof(byteStr), " %02x", buffer[i]);
+            hexDump += byteStr;
+        }
+        phosphor::logging::log<phosphor::logging::level::INFO>(hexDump.c_str());
+    }
+    else
+    {
+        phosphor::logging::log<phosphor::logging::level::ERR>(
+            "processI2cEvent: read failed");
+    }
 
     // Handle error cases.
     if (r < 0)
@@ -398,7 +415,7 @@ void IpmbChannel::processI2cEvent()
     // copy frame to ipmib message buffer
     if (ipmbIsResponse(ipmbFrame))
     {
-        // phosphor::logging::log<phosphor::logging::level::INFO>("processI2cEvent: ipmb frame is a good response.");
+        // phosphor::logging::log<phosphor::logging::level::INFO>("processI2cEvent: ipmb frame is a response.");
         std::unique_ptr<IpmbResponse> ipmbMessageReceived =
             std::make_unique<IpmbResponse>();
 
@@ -409,6 +426,7 @@ void IpmbChannel::processI2cEvent()
     }
     else
     {
+        phosphor::logging::log<phosphor::logging::level::INFO>("processI2cEvent: ipmb frame is NOT a response. Likely is an event");
         // if command is blocked - respond with 'invalid command'
         // completion code
         if (commandFilter)
@@ -449,6 +467,9 @@ void IpmbChannel::processI2cEvent()
 
         using IpmiDbusRspType = std::tuple<uint8_t, uint8_t, uint8_t, uint8_t,
                                            std::vector<uint8_t>>;
+        
+        phosphor::logging::log<phosphor::logging::level::INFO>("processI2cEvent async call for sending the event");
+
         conn->async_method_call(
             [this, rqLun{ipmbMessageReceived.rqLun},
              seq{ipmbMessageReceived.seq}, address{ipmbMessageReceived.rqSA}](
@@ -509,6 +530,7 @@ void IpmbChannel::processI2cEvent()
                     "processI2cEvent: error constructing a request");
                 return;
             }
+            phosphor::logging::log<phosphor::logging::level::INFO>("processI2cEvent sending i2c frame buffer");
 
             ipmbSendI2cFrame(buffer);
             },
@@ -568,7 +590,8 @@ int IpmbChannel::ipmbChannelInit(const char* ipmbI2cSlave)
         phosphor::logging::log<phosphor::logging::level::INFO>("ipmbChannelInit: i2c slave does not exist. it is making a new one");
         std::string deviceFileName = "/sys/bus/i2c/devices/i2c-" + busStr +
                                      "/new_device";
-        std::string para = "ipmb-dev 0x1010"; // init with BMC addr 0x20
+        
+        std::string para = "ipmb-dev 0x" + std::to_string(0x1000 + (ipmbBmcSlaveAddress>>1)); // init with BMC addr 0x40
         std::fstream deviceFile;
         deviceFile.open(deviceFileName, std::ios::out);
         if (!deviceFile.good())
@@ -899,15 +922,18 @@ auto ipmbHandleRequest = [](boost::asio::yield_context yield,
     IpmbChannel* channel = getChannel(reqChannel);
 
     if (channel->getRqSlaveAddress() != addr) {
-        // std::string logMsgT = "ipmbHandleRequest: new address requested. changing slave address to: " + std::to_string(addr);
-        // phosphor::logging::log<phosphor::logging::level::INFO>(logMsgT.c_str());
-        if (addr != 0x40) {
+        std::string logMsgT = "ipmbHandleRequest: new address requested. changing slave address to: " + std::to_string(addr);
+        phosphor::logging::log<phosphor::logging::level::INFO>(logMsgT.c_str());
+        if (addr != 0x20) {
             channel->updateRqSlaveAddress(addr);
         }
     }
 
-    // std::string logMsg = "ipmbHandleRequest: handling request for channel: " + std::to_string(reqChannel)
-    // + " on netFn: " + std::to_string(netfn) + " with lun: " + std::to_string(lun) + " for the command: " + std::to_string(cmd);
+    /*
+    
+    std::string logMsg = "ipmbHandleRequest: handling request for channel: " + std::to_string(reqChannel)
+    + " on netFn: " + std::to_string(netfn) + " with lun: " + std::to_string(lun) + " for the command: " + std::to_string(cmd);
+    */
     // phosphor::logging::log<phosphor::logging::level::INFO>(logMsg.c_str());
 
     if (channel == nullptr)

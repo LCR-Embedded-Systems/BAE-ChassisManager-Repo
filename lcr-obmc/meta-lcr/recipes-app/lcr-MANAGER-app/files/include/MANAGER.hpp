@@ -1,6 +1,15 @@
 
 #include "../include/global.hpp"
 
+struct ADCpaths
+{
+    std::string V12path;
+    std::string V3_3path;
+    std::string V5path;
+    std::string V3_3Auxpath;
+    std::string Vp12Auxpath;
+    std::string Vn12Auxpath;
+};
 
 struct ADC_element
 {
@@ -11,7 +20,8 @@ struct ADC_element
     double scale_coeff;
     double V_current;
     bool safe;
-    ADC_element(const std::string& n, const std::string& p, double target) : name(n), path(p), V_target(target) {}
+    bool present;
+    ADC_element(const std::string& n, const std::string& p, double target, bool pres) : name(n), path(p), V_target(target), present(pres) {}
 };
 
 struct gpio_info {
@@ -31,12 +41,14 @@ class Manager
         Manager();
         ~Manager();
         bool wait_for_switch();
-        bool update_readings();
+        bool update_readings(int num);
         int get_reading(ADC_element ADC);
         void calculate_cs();
         ADC_element* getSensorByName(const std::string& name);
 
         bool set_ps();
+        bool set_ps_inh1();
+        bool set_ps_inh2();
         bool unset_ps();
         bool set_sr();
         bool set_alarm_gpio();
@@ -61,17 +73,22 @@ class Manager
         bool check_ipmi_host_service();
 
         void watch_services();
-        void log_servicechange(bool status);
+        void log_servicechange(std::string* log, bool status);
 
         void watch_gpios();
 
         bool get_fan_controller_status();
+
+        void update_last_append_offset(off_t new_offset);
+
+        bool getfancontrol();
 
     private:
 
         std::vector<std::unique_ptr<ADC_element>> ADCs;
 
         nlohmann::json limitJson;
+        nlohmann::json configJson;
 
         gpio_info sysreset;
 
@@ -81,11 +98,21 @@ class Manager
 
         gpio_info alarm_gpio;
 
+        gpio_info ps_inhibit1;
+
+        gpio_info ps_inhibit2;
+
         bool temp_service_status;
         bool voltage_service_status;
         bool fan_controller_service_status;
         bool mandatory_sensor_service_status;
         bool gpio_service_status;
         bool ipmi_service_status;
+
+        bool fancontrol;
+
+        std::string newlog_string;
+
+        off_t offset;
 
 };

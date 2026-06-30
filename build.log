@@ -1,0 +1,547 @@
+nohup: ignoring input
+[1;32mBuild queued. Currently 0 build(s) ahead of this one.[0m
+[1;34mAcquiring lock. Please wait until other builds are finished...
+[0m
+[1;32mLock acquired. Starting build (your position: 0 ahead).[0m
+
+[1;34m  → No stale queue files found.[0m
+[1;34mNo branch specified; using current branch: develop-chmab1  [0m
+From https://github.com/LCR-Embedded-Systems/LCR-ChassisManager-Repo
+   0db69270..9f9f3801  develop-chmab1 -> origin/develop-chmab1
+HEAD is now at 9f9f3801 Implementing second SPI
+[1;34mBuilding on branch: [0m
+develop-chmab1
+
+### Shell environment set up for builds. ###
+
+You can now run 'bitbake <target>'
+
+Common targets are:
+    core-image-minimal
+    core-image-full-cmdline
+    core-image-sato
+    core-image-weston
+    meta-toolchain
+    meta-ide-support
+
+You can also run generated qemu images with a command like 'runqemu qemux86-64'.
+
+Other commonly useful commands are:
+ - 'devtool' and 'recipetool' handle common recipe tasks
+ - 'bitbake-layers' handles common layer tasks
+ - 'oe-pkgdata-util' handles common target package tasks
+Machine zc702-zynq7 found in meta-lcr
+To build the OpenBMC image for zc702-zynq7 run 'bitbake obmc-phosphor-image'
+Loading cache...done.
+Loaded 0 entries from dependency cache.
+Parsing recipes...WARNING: /home/lcr/projects/LCR-ChassisManager-Repo/lcr-obmc/meta/recipes-core/os-release/os-release.bb: Unexpected exception from 'git' call: Execution of 'export PSEUDO_DISABLED=1; git --work-tree /home/lcr/projects/LCR-ChassisManager-Repo/lcr-obmc --git-dir /home/lcr/projects/LCR-ChassisManager-Repo/lcr-obmc/.git describe --dirty' failed with exit code 128:
+fatal: not a git repository: '/home/lcr/projects/LCR-ChassisManager-Repo/lcr-obmc/.git'
+
+WARNING: /home/lcr/projects/LCR-ChassisManager-Repo/lcr-obmc/meta-lcr/recipes-app/lcr-ADC-app/lcr-ADC-app_1.0.bb: QA Issue: PN: lcr-ADC-app is upper case, this can result in unexpected behavior. [uppercase-pn]
+done.
+Parsing of 2794 .bb files complete (0 cached, 2794 parsed). 4544 targets, 572 skipped, 0 masked, 0 errors.
+NOTE: Resolving any missing task queue dependencies
+
+Build Configuration:
+BB_VERSION           = "2.4.0"
+BUILD_SYS            = "x86_64-linux"
+NATIVELSBSTRING      = "ubuntu-22.04"
+TARGET_SYS           = "arm-openbmc-linux-gnueabi"
+MACHINE              = "zc702-zynq7"
+DISTRO               = "openbmc-lcr"
+DISTRO_VERSION       = "nodistro.0"
+TUNE_FEATURES        = "arm vfp cortexa9 callconvention-hard vfpv3"
+TARGET_FPU           = "hard"
+meta                 
+meta-oe              
+meta-networking      
+meta-perl            
+meta-python          
+meta-phosphor        
+meta-lcr             
+workspace            = "develop-chmab1:9f9f3801d1f014695fb842c931f2fd654e1274ce"
+
+Initialising tasks...done.
+Sstate summary: Wanted 0 Local 0 Mirrors 0 Missed 0 Current 0 (0% match, 0% complete)
+NOTE: No setscene tasks
+NOTE: Executing Tasks
+NOTE: Running task 1 of 1 (/home/lcr/projects/LCR-ChassisManager-Repo/lcr-obmc/meta-lcr/recipes-app/lcr-ipmitool/lcr-ipmitool_1.0.bb:do_clean)
+NOTE: recipe lcr-ipmitool-1.0-r0: task do_clean: Started
+NOTE: recipe lcr-ipmitool-1.0-r0: task do_clean: Succeeded
+NOTE: Tasks Summary: Attempted 1 tasks of which 0 didn't need to be rerun and all succeeded.
+
+Summary: There were 2 WARNING messages.
+Loading cache...done.
+Loaded 4537 entries from dependency cache.
+Parsing recipes...WARNING: /home/lcr/projects/LCR-ChassisManager-Repo/lcr-obmc/meta/recipes-core/os-release/os-release.bb: Unexpected exception from 'git' call: Execution of 'export PSEUDO_DISABLED=1; git --work-tree /home/lcr/projects/LCR-ChassisManager-Repo/lcr-obmc --git-dir /home/lcr/projects/LCR-ChassisManager-Repo/lcr-obmc/.git describe --dirty' failed with exit code 128:
+fatal: not a git repository: '/home/lcr/projects/LCR-ChassisManager-Repo/lcr-obmc/.git'
+
+done.
+Parsing of 2794 .bb files complete (2787 cached, 7 parsed). 4544 targets, 572 skipped, 0 masked, 0 errors.
+NOTE: Resolving any missing task queue dependencies
+
+Build Configuration:
+BB_VERSION           = "2.4.0"
+BUILD_SYS            = "x86_64-linux"
+NATIVELSBSTRING      = "ubuntu-22.04"
+TARGET_SYS           = "arm-openbmc-linux-gnueabi"
+MACHINE              = "zc702-zynq7"
+DISTRO               = "openbmc-lcr"
+DISTRO_VERSION       = "nodistro.0"
+TUNE_FEATURES        = "arm vfp cortexa9 callconvention-hard vfpv3"
+TARGET_FPU           = "hard"
+meta                 
+meta-oe              
+meta-networking      
+meta-perl            
+meta-python          
+meta-phosphor        
+meta-lcr             
+workspace            = "develop-chmab1:9f9f3801d1f014695fb842c931f2fd654e1274ce"
+
+Initialising tasks...done.
+Sstate summary: Wanted 207 Local 207 Mirrors 0 Missed 0 Current 1623 (100% match, 100% complete)
+NOTE: Executing Tasks
+NOTE: Running setscene task 1634 of 1830 (/home/lcr/projects/LCR-ChassisManager-Repo/lcr-obmc/meta-lcr/recipes-app/lcr-ipmitool/lcr-ipmitool_1.0.bb:do_package_qa_setscene)
+NOTE: Running setscene task 1635 of 1830 (/home/lcr/projects/LCR-ChassisManager-Repo/lcr-obmc/meta-lcr/recipes-app/lcr-ipmitool/lcr-ipmitool_1.0.bb:do_package_write_rpm_setscene)
+NOTE: Running setscene task 1636 of 1830 (/home/lcr/projects/LCR-ChassisManager-Repo/lcr-obmc/meta-lcr/recipes-app/lcr-ipmitool/lcr-ipmitool_1.0.bb:do_populate_lic_setscene)
+NOTE: recipe lcr-ipmitool-1.0-r0: task do_package_qa_setscene: Started
+NOTE: recipe lcr-ipmitool-1.0-r0: task do_package_write_rpm_setscene: Started
+NOTE: recipe lcr-ipmitool-1.0-r0: task do_populate_lic_setscene: Started
+NOTE: recipe lcr-ipmitool-1.0-r0: task do_package_qa_setscene: Succeeded
+NOTE: recipe lcr-ipmitool-1.0-r0: task do_populate_lic_setscene: Succeeded
+NOTE: recipe lcr-ipmitool-1.0-r0: task do_package_write_rpm_setscene: Succeeded
+NOTE: Running setscene task 1828 of 1830 (/home/lcr/projects/LCR-ChassisManager-Repo/lcr-obmc/meta-lcr/recipes-app/lcr-ipmitool/lcr-ipmitool_1.0.bb:do_packagedata_setscene)
+NOTE: recipe lcr-ipmitool-1.0-r0: task do_packagedata_setscene: Started
+NOTE: recipe lcr-ipmitool-1.0-r0: task do_packagedata_setscene: Succeeded
+NOTE: Tasks Summary: Attempted 4584 tasks of which 4584 didn't need to be rerun and all succeeded.
+
+Summary: There was 1 WARNING message.
+*************************************************************************************************************************************************
+The PetaLinux source code and images provided/generated are for demonstration purposes only.
+Please refer to https://xilinx-wiki.atlassian.net/wiki/spaces/A/pages/2741928025/Moving+from+PetaLinux+to+Production+Deployment
+ for more details
+*************************************************************************************************************************************************
+PetaLinux environment set to '/home/lcr/projects/petalinux-2024.2'
+WARNING: /bin/sh is not bash! 
+bash is PetaLinux recommended shell. Please set your default shell to bash.
+[WARNING] This is not a supported OS
+[INFO] Checking free disk space
+[INFO] Checking installed tools
+[INFO] Checking installed development libraries
+[INFO] Checking network and other services
+[WARNING] No tftp server found - please refer to "UG1144 2024.2 PetaLinux Tools Documentation Reference Guide" for its impact and solution
+[INFO] Create project: peta-bsp
+[ERROR] Component "/home/lcr/projects/peta-bsp" already exists. Use --force option to overwrite
+[1;34mLCR INFO running petalinux config now[0m
+[INFO] Getting hardware description
+[INFO] Renaming BCM_top_wrapper_BAE_052026_rv1.xsa to system.xsa
+[INFO] Bitbake is not available, some functionality may be reduced.
+[INFO] Using HW file: /home/lcr/projects/peta-bsp/project-spec/hw-description/system.xsa
+[INFO] Getting Platform info from HW file
+[INFO] Generating Kconfig for project
+[INFO] Silentconfig project
+[INFO] Silentconfig rootfs
+[INFO] Generating configuration files
+[INFO] Generating machine conf file
+[INFO] Generating plnxtool conf file
+[INFO] Generating workspace directory
+NOTE: Starting bitbake server...
+NOTE: Started PRServer with DBfile: /home/lcr/projects/peta-bsp/build/cache/prserv.sqlite3, Address: 127.0.0.1:40435, PID: 1448888
+INFO: Specified workspace already set up, leaving as-is
+[INFO] Successfully configured project
+[1;34mLCR INFO running grep and move now[0m
+[1;34mLCR INFO running petalinux build now[0m
+[INFO] Building project
+[INFO] Bitbake is not available, some functionality may be reduced.
+[INFO] Using HW file: /home/lcr/projects/peta-bsp/project-spec/hw-description/system.xsa
+[INFO] Getting Platform info from HW file
+[INFO] Silentconfig project
+[INFO] Silentconfig rootfs
+[INFO] Generating configuration files
+[INFO] Generating machine conf file
+[INFO] Generating plnxtool conf file
+[INFO] Generating workspace directory
+NOTE: Starting bitbake server...
+NOTE: Started PRServer with DBfile: /home/lcr/projects/peta-bsp/build/cache/prserv.sqlite3, Address: 127.0.0.1:46161, PID: 1449214
+INFO: Specified workspace already set up, leaving as-is
+[INFO] bitbake petalinux-image-minimal
+NOTE: Started PRServer with DBfile: /home/lcr/projects/peta-bsp/build/cache/prserv.sqlite3, Address: 127.0.0.1:40813, PID: 1449297
+WARNING: XSCT has been deprecated. It will still be available for several releases. In the future, it's recommended to start new projects with SDT workflow.
+Loading cache...done.
+Loaded 8452 entries from dependency cache.
+Parsing recipes...done.
+Parsing of 5800 .bb files complete (5798 cached, 2 parsed). 8454 targets, 1106 skipped, 28 masked, 0 errors.
+WARNING: No recipes in default available for:
+  /home/lcr/projects/peta-bsp/project-spec/meta-user/recipes-core/images/petalinux-image.bbappend
+NOTE: Resolving any missing task queue dependencies
+Initialising tasks...Checking sstate mirror object availability...done.
+Sstate summary: Wanted 522 Local 15 Mirrors 467 Missed 40 Current 2222 (92% match, 98% complete)
+Removing 33 stale sstate objects for arch zynq_generic_7z020...done.
+NOTE: Executing Tasks
+NOTE: Running setscene task 2333 of 2745 (/home/lcr/projects/peta-bsp/components/yocto/layers/poky/meta/recipes-core/packagegroups/packagegroup-core-boot.bb:do_package_setscene)
+NOTE: recipe packagegroup-core-boot-1.0-r0: task do_package_setscene: Started
+NOTE: recipe packagegroup-core-boot-1.0-r0: task do_package_setscene: Succeeded
+NOTE: Running task 2747 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_fetch)
+NOTE: Running task 3216 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_fetch)
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_fetch: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_fetch: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_fetch: Succeeded
+NOTE: Running task 4457 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_prepare_recipe_sysroot)
+NOTE: Running task 4476 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_unpack)
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_fetch: Succeeded
+NOTE: Running task 4714 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_prepare_recipe_sysroot)
+NOTE: Running task 4715 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_unpack)
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_prepare_recipe_sysroot: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_unpack: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_unpack: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_prepare_recipe_sysroot: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_unpack: Succeeded
+NOTE: Running task 4716 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_collect_spdx_deps)
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_collect_spdx_deps: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_prepare_recipe_sysroot: Succeeded
+NOTE: Running task 4717 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_create_yaml)
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_create_yaml: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_create_yaml: Succeeded
+NOTE: Running task 4718 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_patch)
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_collect_spdx_deps: Succeeded
+NOTE: Running task 4811 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/bootbin/xilinx-bootbin_1.0.bb:do_fetch)
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_patch: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_patch: Succeeded
+NOTE: Running task 4812 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_populate_lic)
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_fetch: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_populate_lic: Started
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_fetch: Succeeded
+NOTE: Running task 4813 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_deploy_source_date_epoch)
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_deploy_source_date_epoch: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_prepare_recipe_sysroot: Succeeded
+NOTE: Running task 4814 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/bootbin/xilinx-bootbin_1.0.bb:do_unpack)
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_unpack: Started
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_unpack: Succeeded
+NOTE: Running noexec task 4815 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/bootbin/xilinx-bootbin_1.0.bb:do_patch)
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_deploy_source_date_epoch: Succeeded
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_populate_lic: Succeeded
+NOTE: Running task 4972 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_configure)
+NOTE: Running noexec task 5191 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-petalinux/recipes-core/images/petalinux-image-minimal.bb:do_fetch)
+NOTE: Running task 5192 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-petalinux/recipes-core/images/petalinux-image-minimal.bb:do_prepare_recipe_sysroot)
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_configure: Started
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_prepare_recipe_sysroot: Started
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_prepare_recipe_sysroot: Succeeded
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_unpack: Succeeded
+NOTE: Running task 5952 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_collect_spdx_deps)
+NOTE: Running task 5953 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_patch)
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_collect_spdx_deps: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_patch: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_collect_spdx_deps: Succeeded
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_patch: Succeeded
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_configure: Succeeded
+NOTE: Running task 5956 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_patch_config)
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_patch_config: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_patch_config: Succeeded
+NOTE: Running task 5957 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_compile)
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_compile: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_compile: Succeeded
+NOTE: Running task 5958 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_install)
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_install: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_install: Succeeded
+NOTE: Running task 5959 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_package)
+NOTE: Running task 5960 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_deploy)
+NOTE: Running task 5961 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_populate_sysroot)
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_deploy: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_populate_sysroot: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_package: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_deploy: Succeeded
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_populate_sysroot: Succeeded
+NOTE: Running task 5962 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-kernel/linux/linux-xlnx_6.6.40-v2024.2.bb:do_assemble_fitimage)
+NOTE: Running task 5963 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_configure)
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_configure: Started
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_assemble_fitimage: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_package: Succeeded
+NOTE: Running task 5964 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_packagedata)
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_packagedata: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_packagedata: Succeeded
+NOTE: Running task 5965 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_package_qa)
+NOTE: Running task 5966 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_package_write_rpm)
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_package_qa: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_package_write_rpm: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_package_qa: Succeeded
+NOTE: Running task 5967 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_create_spdx)
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_create_spdx: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_package_write_rpm: Succeeded
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_assemble_fitimage: Succeeded
+NOTE: Running task 5968 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-kernel/linux/linux-xlnx_6.6.40-v2024.2.bb:do_install)
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_create_spdx: Succeeded
+NOTE: Running task 5969 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_create_runtime_spdx)
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_install: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_create_runtime_spdx: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_create_runtime_spdx: Succeeded
+NOTE: Running task 5970 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb:do_rm_work)
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_rm_work: Started
+NOTE: recipe device-tree-xilinx-v2024.2+git-r0: task do_rm_work: Succeeded
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_configure: Succeeded
+NOTE: Running task 5971 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_compile)
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_compile: Started
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_install: Succeeded
+NOTE: Running task 5972 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-kernel/linux/linux-xlnx_6.6.40-v2024.2.bb:do_package)
+NOTE: Running task 5973 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-kernel/linux/linux-xlnx_6.6.40-v2024.2.bb:do_populate_sysroot)
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_package: Started
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_populate_sysroot: Started
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_populate_sysroot: Succeeded
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_package: Succeeded
+NOTE: Running task 5974 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-kernel/linux/linux-xlnx_6.6.40-v2024.2.bb:do_packagedata)
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_packagedata: Started
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_packagedata: Succeeded
+NOTE: Running task 5980 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-kernel/linux/linux-xlnx_6.6.40-v2024.2.bb:do_package_qa)
+NOTE: Running task 5986 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-kernel/linux/linux-xlnx_6.6.40-v2024.2.bb:do_package_write_rpm)
+NOTE: Running task 5987 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-kernel/linux/linux-xlnx_6.6.40-v2024.2.bb:do_create_spdx)
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_create_spdx: Started
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_package_qa: Started
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_package_write_rpm: Started
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_create_spdx: Succeeded
+NOTE: Running task 5988 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-petalinux/recipes-core/images/petalinux-image-minimal.bb:do_create_runtime_spdx)
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_create_runtime_spdx: Started
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_create_runtime_spdx: Succeeded
+NOTE: Running task 5999 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-kernel/linux/linux-xlnx_6.6.40-v2024.2.bb:do_create_runtime_spdx)
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_create_runtime_spdx: Started
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_create_runtime_spdx: Succeeded
+NOTE: Running task 6000 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-kernel/linux/linux-xlnx_6.6.40-v2024.2.bb:do_rm_work)
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_rm_work: Started
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_rm_work: Succeeded
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_package_write_rpm: Succeeded
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_package_qa: Succeeded
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_compile: Succeeded
+NOTE: Running task 6001 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_create_extlinux_config)
+NOTE: Running task 6002 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_uboot_generate_rsa_keys)
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_uboot_generate_rsa_keys: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_create_extlinux_config: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_create_extlinux_config: Succeeded
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_uboot_generate_rsa_keys: Succeeded
+NOTE: Running task 6003 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_uboot_assemble_fitimage)
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_uboot_assemble_fitimage: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_uboot_assemble_fitimage: Succeeded
+NOTE: Running task 6004 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_deploy)
+NOTE: Running task 6005 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_install)
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_deploy: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_install: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_install: Succeeded
+NOTE: Running task 6006 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_package)
+NOTE: Running task 6007 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_populate_sysroot)
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_deploy: Succeeded
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_populate_sysroot: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_package: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_populate_sysroot: Succeeded
+NOTE: Running task 6008 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/bootbin/xilinx-bootbin_1.0.bb:do_prepare_recipe_sysroot)
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_prepare_recipe_sysroot: Started
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_prepare_recipe_sysroot: Succeeded
+NOTE: Running task 6009 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/bootbin/xilinx-bootbin_1.0.bb:do_configure)
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_package: Succeeded
+NOTE: Running task 6010 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_packagedata)
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_configure: Started
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_configure: Succeeded
+NOTE: Running task 6011 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/bootbin/xilinx-bootbin_1.0.bb:do_compile)
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_packagedata: Started
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_compile: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_packagedata: Succeeded
+NOTE: Running task 6012 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_package_qa)
+NOTE: Running task 6013 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_package_write_rpm)
+NOTE: Running task 6014 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_create_spdx)
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_compile: Succeeded
+NOTE: Running task 6015 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/bootbin/xilinx-bootbin_1.0.bb:do_deploy)
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_package_qa: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_package_write_rpm: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_create_spdx: Started
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_deploy: Started
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_deploy: Succeeded
+NOTE: Running task 6016 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/bootbin/xilinx-bootbin_1.0.bb:do_install)
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_package_qa: Succeeded
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_install: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_create_spdx: Succeeded
+NOTE: Running task 6017 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_create_runtime_spdx)
+NOTE: Running task 6018 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/bootbin/xilinx-bootbin_1.0.bb:do_collect_spdx_deps)
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_create_runtime_spdx: Started
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_collect_spdx_deps: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_package_write_rpm: Succeeded
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_install: Succeeded
+NOTE: Running task 6019 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/bootbin/xilinx-bootbin_1.0.bb:do_package)
+NOTE: Running task 6020 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/bootbin/xilinx-bootbin_1.0.bb:do_populate_sysroot)
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_collect_spdx_deps: Succeeded
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_package: Started
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_populate_sysroot: Started
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_create_runtime_spdx: Succeeded
+NOTE: Running task 6021 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/u-boot/u-boot-xlnx_2024.01-xilinx-v2024.2.bb:do_rm_work)
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_rm_work: Started
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_populate_sysroot: Succeeded
+NOTE: recipe u-boot-xlnx-1_2024.01-xilinx-v2024.2+git-r0: task do_rm_work: Succeeded
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_package: Succeeded
+NOTE: Running task 6022 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/bootbin/xilinx-bootbin_1.0.bb:do_packagedata)
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_packagedata: Started
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_packagedata: Succeeded
+NOTE: Running task 6023 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/bootbin/xilinx-bootbin_1.0.bb:do_package_qa)
+NOTE: Running task 6024 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/poky/meta/recipes-core/packagegroups/packagegroup-core-boot.bb:do_package_qa)
+NOTE: Running task 6025 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/poky/meta/recipes-core/packagegroups/packagegroup-core-boot.bb:do_package_write_rpm)
+NOTE: Running task 6026 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/bootbin/xilinx-bootbin_1.0.bb:do_package_write_rpm)
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_package_qa: Started
+NOTE: recipe packagegroup-core-boot-1.0-r0: task do_package_qa: Started
+NOTE: recipe packagegroup-core-boot-1.0-r0: task do_package_write_rpm: Started
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_package_write_rpm: Started
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_package_qa: Succeeded
+NOTE: Running task 6027 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/bootbin/xilinx-bootbin_1.0.bb:do_create_spdx)
+NOTE: recipe packagegroup-core-boot-1.0-r0: task do_package_qa: Succeeded
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_create_spdx: Started
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_create_spdx: Succeeded
+NOTE: Running task 6028 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/bootbin/xilinx-bootbin_1.0.bb:do_create_runtime_spdx)
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_create_runtime_spdx: Started
+NOTE: recipe packagegroup-core-boot-1.0-r0: task do_package_write_rpm: Succeeded
+NOTE: Running task 6029 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/poky/meta/recipes-core/packagegroups/packagegroup-core-boot.bb:do_rm_work)
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_package_write_rpm: Succeeded
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_create_runtime_spdx: Succeeded
+NOTE: Running task 6030 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-bsp/bootbin/xilinx-bootbin_1.0.bb:do_rm_work)
+NOTE: recipe packagegroup-core-boot-1.0-r0: task do_rm_work: Started
+NOTE: Running task 6031 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-petalinux/recipes-core/images/petalinux-image-minimal.bb:do_rootfs)
+NOTE: recipe packagegroup-core-boot-1.0-r0: task do_rm_work: Succeeded
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_rm_work: Started
+NOTE: recipe xilinx-bootbin-1.0-r0: task do_rm_work: Succeeded
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_rootfs: Started
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_rootfs: Succeeded
+NOTE: Running task 6032 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-petalinux/recipes-core/images/petalinux-image-minimal.bb:do_write_qemuboot_conf)
+NOTE: Running task 6033 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-petalinux/recipes-core/images/petalinux-image-minimal.bb:do_flush_pseudodb)
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_write_qemuboot_conf: Started
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_write_qemuboot_conf: Succeeded
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_flush_pseudodb: Started
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_flush_pseudodb: Succeeded
+NOTE: Running task 6034 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-petalinux/recipes-core/images/petalinux-image-minimal.bb:do_image_qa)
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_image_qa: Started
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_image_qa: Succeeded
+NOTE: Running task 6035 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-petalinux/recipes-core/images/petalinux-image-minimal.bb:do_image)
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_image: Started
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_image: Succeeded
+NOTE: Running task 6036 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-petalinux/recipes-core/images/petalinux-image-minimal.bb:do_image_cpio)
+NOTE: Running task 6037 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-petalinux/recipes-core/images/petalinux-image-minimal.bb:do_image_ext4)
+NOTE: Running task 6038 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-petalinux/recipes-core/images/petalinux-image-minimal.bb:do_image_tar)
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_image_cpio: Started
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_image_ext4: Started
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_image_tar: Started
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_image_ext4: Succeeded
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_image_tar: Succeeded
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_image_cpio: Succeeded
+NOTE: Running task 6039 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-petalinux/recipes-core/images/petalinux-image-minimal.bb:do_image_complete)
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_image_complete: Started
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_image_complete: Succeeded
+NOTE: Running task 6040 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-kernel/linux/linux-xlnx_6.6.40-v2024.2.bb:do_bundle_initramfs)
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_bundle_initramfs: Started
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_bundle_initramfs: Succeeded
+NOTE: Running task 6041 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-kernel/linux/linux-xlnx_6.6.40-v2024.2.bb:do_assemble_fitimage_initramfs)
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_assemble_fitimage_initramfs: Started
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_assemble_fitimage_initramfs: Succeeded
+NOTE: Running task 6042 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-xilinx/meta-xilinx-core/recipes-kernel/linux/linux-xlnx_6.6.40-v2024.2.bb:do_deploy)
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_deploy: Started
+NOTE: recipe linux-xlnx-6.6.40+git-r0: task do_deploy: Succeeded
+NOTE: Running task 6043 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-petalinux/recipes-core/images/petalinux-image-minimal.bb:do_populate_lic_deploy)
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_populate_lic_deploy: Started
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_populate_lic_deploy: Succeeded
+NOTE: Running task 6044 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-petalinux/recipes-core/images/petalinux-image-minimal.bb:do_rm_work)
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_rm_work: Started
+NOTE: recipe petalinux-image-minimal-1.0-r0: task do_rm_work: Succeeded
+NOTE: Running noexec task 6045 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-petalinux/recipes-core/images/petalinux-image-minimal.bb:do_rm_work_all)
+NOTE: Running noexec task 6046 of 6046 (/home/lcr/projects/peta-bsp/components/yocto/layers/meta-petalinux/recipes-core/images/petalinux-image-minimal.bb:do_build)
+NOTE: Tasks Summary: Attempted 6046 tasks of which 5956 didn't need to be rerun and all succeeded.
+
+Summary: There were 2 WARNING messages.
+[INFO] Successfully copied built images to tftp dir: /tftpboot
+[INFO] Successfully built project
+[1;34mLCR INFO running import obmc rootfs now[0m
+FIT description: fitImage configuration for LCR's image.ub
+Created:         Mon Jun 29 16:44:27 2026
+ Image 0 (kernel-1)
+  Description:  Linux Kernel
+  Created:      Mon Jun 29 16:44:27 2026
+  Type:         Kernel Image
+  Compression:  uncompressed
+  Data Size:    5046120 Bytes = 4927.85 KiB = 4.81 MiB
+  Architecture: ARM
+  OS:           Linux
+  Load Address: 0x00200000
+  Entry Point:  0x00200000
+  Hash algo:    sha256
+  Hash value:   fe29d7837dfb718ed33917ad2c662aea5b080de1d19cd58e8513e11e7451572a
+ Image 1 (fdt-system-top.dtb)
+  Description:  Flattened Device Tree blob
+  Created:      Mon Jun 29 16:44:27 2026
+  Type:         Flat Device Tree
+  Compression:  uncompressed
+  Data Size:    33372 Bytes = 32.59 KiB = 0.03 MiB
+  Architecture: ARM
+  Hash algo:    sha256
+  Hash value:   2fd29863ec53fcf23c2efe64ba51e1316b06ee3cdc3734b203c168acc51fa9b4
+ Image 2 (ramdisk-1)
+  Description:  ramdisk
+  Created:      Mon Jun 29 16:44:27 2026
+  Type:         RAMDisk Image
+  Compression:  uncompressed
+  Data Size:    52475588 Bytes = 51245.69 KiB = 50.04 MiB
+  Architecture: ARM
+  OS:           Linux
+  Load Address: unavailable
+  Entry Point:  unavailable
+  Hash algo:    sha256
+  Hash value:   241063d787ece9ababbb6f9a7a29909c81e117bf12bb659c213f26136407db2e
+ Default Configuration: 'conf-system-top.dtb'
+ Configuration 0 (conf-system-top.dtb)
+  Description:  Boot Linux kernel with FDT blob + ramdisk
+  Kernel:       kernel-1
+  Init Ramdisk: ramdisk-1
+  FDT:          fdt-system-top.dtb
+  Hash algo:    sha256
+  Hash value:   unavailable
+[INFO] File in BOOT BIN: "/home/lcr/projects/peta-bsp/images/linux/zynq_fsbl.elf"
+[INFO] File in BOOT BIN: "/home/lcr/projects/peta-bsp/images/linux/system.bit"
+[INFO] File in BOOT BIN: "/home/lcr/projects/peta-bsp/images/linux/u-boot.elf"
+[INFO] File in BOOT BIN: "/home/lcr/projects/peta-bsp/images/linux/system.dtb"
+[INFO] Generating zynq binary package BOOT.BIN...
+[INFO] 
+
+****** Bootgen v2024.2
+  **** Build date : Oct 21 2024-10:58:34
+    ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+    ** Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+
+
+[INFO]   : Bootimage generated successfully
+
+
+[INFO] Binary is ready.
+[INFO] Successfully Generated BIN File
+-----------------------------------------------------------------------------------------------------------------------------
+[1;32mFinished building on branch: develop-chmab1 [0m
+-----------------------------------------------------------------------------------------------------------------------------
+[1;32mBuild completed successfully.[0m
+[1;32mInstructions saved to: /home/lcr/projects/build_instructions.txt[0m
+-----------------------------------------------------------------------------------------------------------------------------
+Build completed successfully on: Mon Jun 29 12:44:28 PM EDT 2026
+Branch: develop-chmab1
+Unique suffix: develop-chmab1_20260629_124428
+Build log: /home/lcr/projects/last_build.log
+
+-----------------------------------------------------------------------------------------------------------------------------
+IF DOING A FIRST TIME FLASH OR REBUILDING THE XSA, DO THE FOLLOWING.
+
+To copy the files to your local machine, ensure it is on the same LAN network as the build machine and run the following command from the computer you intend to flash on:
+scp lcr@192.168.0.35:./projects/peta-bsp/images/linux/zynq_fsbl.elf lcr@192.168.0.35:./projects/peta-bsp/images/linux/BOOT_develop-chmab1_20260629_124428.BIN lcr@192.168.0.35:./projects/peta-bsp/images/linux/boot_develop-chmab1_20260629_124428.scr lcr@192.168.0.35:./projects/peta-bsp/images/linux/image_develop-chmab1_20260629_124428.ub .
+
+-----------------------------------------------------------------------------------------------------------------------------
+Run this command to flash:
+connect; targets; target 2; program_flash -f c:/users/tc/lcr/BOOT_develop-chmab1_20260629_124428.BIN -fsbl c:/users/tc/lcr/zynq_fsbl.elf -offset 0x0 -flash_type qspi-x2-single; program_flash -f c:/users/tc/lcr/boot_develop-chmab1_20260629_124428.scr -fsbl c:/users/tc/lcr/zynq_fsbl.elf -offset 0x800000 -flash_type qspi-x2-single; program_flash -f c:/users/tc/lcr/image_develop-chmab1_20260629_124428.ub -fsbl c:/users/tc/lcr/zynq_fsbl.elf -offset 0x840000 -flash_type qspi-x2-single
+
+-----------------------------------------------------------------------------------------------------------------------------
+IF YOU ARE FLASHING NEW FIRMWARE TO A UNIT THAT ALREADY HAS A WORKING KERNEL FLASH, DO THE FOLLOWING.
+
+To copy the files to your unit, ensure it is on the same LAN network as the build machine and run the following command from the unit:
+scp lcr@192.168.0.35:./projects/peta-bsp/images/linux/BOOT_develop-chmab1_20260629_124428.BIN lcr@192.168.0.35:./projects/peta-bsp/images/linux/boot_develop-chmab1_20260629_124428.scr lcr@192.168.0.35:./projects/peta-bsp/images/linux/image_develop-chmab1_20260629_124428.ub .
+
+-----------------------------------------------------------------------------------------------------------------------------
+Run this command to flash:
+flashcp -v BOOT_develop-chmab1_20260629_124428.BIN /dev/mtd0 && flashcp -v boot_develop-chmab1_20260629_124428.scr /dev/mtd1 && flashcp -v image_develop-chmab1_20260629_124428.ub /dev/mtd2
+
+-----------------------------------------------------------------------------------------------------------------------------
+Once flashed, reboot for the new firmware to take effect.
+[1;32mBuild finished successfully.[0m

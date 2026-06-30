@@ -1,0 +1,127 @@
+{
+    "name": "Test Fixture 1",
+    "fancontrol": true,
+    "tempsensors": {
+        "hwmon2" : {
+            "name" : "bus4_1",
+            "number" : 8,
+            "bus" : 4,
+            "address" : 72
+        }, 
+        "hwmon3": {
+            "name": "bus4_2",
+            "number" : 9,
+            "bus" : 4,
+            "address" : 79
+        },
+        "hwmon4": {
+            "name" : "bus5_1",
+            "number" : 10,
+            "bus" : 5,
+            "address" : 72
+        },
+        "hwmon5": {
+            "name" : "bus5_2",
+            "number" : 11,
+            "bus" : 5,
+            "address" : 79
+        },
+        "hwmon6": {
+            "name" : "bus6_1",
+            "number" : 12,
+            "bus" : 6,
+            "address" : 72
+        },
+        "hwmon7": {
+            "name" : "bus6_2",
+            "number" : 13,
+            "bus" : 6,
+            "address" : 79
+        },
+        "hwmon8": {
+            "name" : "bus7_1",
+            "number" : 14,
+            "bus" : 7,
+            "address" : 72
+        },
+        "hwmon9": {
+            "name" : "bus7_2",
+            "number" : 15,
+            "bus" : 7,
+            "address" : 79
+        }
+    },
+    "adcsensors": {
+        "iio:device0": {
+            "bus" : 0,
+            "address" : 0,
+            "12V_Rail": {
+                "type": "voltage",
+                "dir": "in_voltage9_raw",
+                "target": 12.0,
+                "number" : 16,
+                "present": true
+            },
+            "3_3V_Rail": {
+                "type": "voltage",
+                "dir":  "in_voltage10_raw",
+                "target": 3.3,
+                "number" : 17,
+                "present": true
+            },
+            "5V_Rail": {
+                "type": "voltage",
+                "dir": "in_voltage11_raw",
+                "target": 5.0,
+                "number" : 18,
+                "present": true
+            },
+            "3_3auxV_Rail": {
+                "type": "voltage",
+                "dir": "in_voltage12_raw",
+                "target": 3.3,
+                "number" : 19,
+                "present": true
+            },
+            "12pauxV_Rail": {
+                "type": "voltage",
+                "dir": "in_voltage13_raw",
+                "target": 12.0,
+                "number" : 20,
+                "present": true
+            },
+            "12nauxV_Rail": {
+                "type": "voltage",
+                "dir": "in_voltage14_raw",
+                "target": -12.0,
+                "number" : 21,
+                "present": true
+            } 
+        }
+    },
+    "fancontrollers": {
+        "hwmon10": {
+            "bus" : 2,
+            "address" : 32,
+            "J17": {
+                "dir" : 1,
+                "number" : 22
+            },
+            "J6":{
+                "dir" : 2,
+                "number" : 23
+            },
+            "J5": {
+                "dir" : 3,
+                "number" : 24
+            },
+            "J7": {
+                "dir" : 4,
+                "number" : 25
+            }
+        }
+    },
+    "gpioexpanders": {
+
+    }
+}

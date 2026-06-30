@@ -1,25 +1,13 @@
 #include "../include/MANAGER.hpp"
 
-//attempted test change
-
 std::ofstream boot_dbgfile("boot_lcr.dbg.log", std::ios::app);
 std::ofstream system_logs("system_logs.log", std::ios::app);
 
-const size_t MAX_SIZE = 1024 * 1024;  // 1 MB in bytes
-
-
-struct ADCpaths
-{
-    std::string V12path = "/sys/bus/iio/devices/iio:device0/in_voltage9_raw";
-    std::string V3_3path = "/sys/bus/iio/devices/iio:device0/in_voltage10_raw";
-    std::string V5path = "/sys/bus/iio/devices/iio:device0/in_voltage11_raw";
-    std::string V3_3Auxpath = "/sys/bus/iio/devices/iio:device0/in_voltage12_raw";
-    std::string Vp12Auxpath = "/sys/bus/iio/devices/iio:device0/in_voltage13_raw";
-    std::string Vn12Auxpath = "/sys/bus/iio/devices/iio:device0/in_voltage14_raw";
-};
+const size_t MAX_SIZE = 8 * 1024;  // 8 kB in bytes
 
 // Check if D-Bus system is ready
-bool isDBusReady() {
+bool isDBusReady() 
+{
     sd_bus *bus = NULL;
     sd_bus_error error = SD_BUS_ERROR_NULL;
     sd_bus_message *msg = NULL;
@@ -47,7 +35,8 @@ bool isDBusReady() {
 }
 
 // Helper function to check if a systemd service is active
-bool isServiceActive(const std::string& serviceName) {
+bool isServiceActive(const std::string& serviceName) 
+{
     const int max_retries = 5;  // Increased from 3
     const int base_delay_ms = 1000;  // Longer base delay
     const int max_delay_ms = 5000;
@@ -165,7 +154,8 @@ bool isServiceActive(const std::string& serviceName) {
     return false;
 }
 
-nlohmann::json Manager::readJson(std::string path) {
+nlohmann::json Manager::readJson(std::string path) 
+{
     std::ifstream f(path);
 
     nlohmann::json read;
@@ -179,12 +169,14 @@ nlohmann::json Manager::readJson(std::string path) {
     return read;
 }
 
-void Manager::init_system_logs() {
+void Manager::init_system_logs() 
+{
 
     //read the old logfile from flash, and load that into the logfile in the filesystem.
 
     boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: attempting to read system logs from flash" << std::endl;
 
+    offset = 0;
     std::string filename = "/dev/mtd4";
     std::ifstream fileo(filename);
 
@@ -199,10 +191,10 @@ void Manager::init_system_logs() {
         if (lineLength < 1024) {
             if (!lineo.empty()){
                 if (lineo[0] == '['){
+                    offset = fileo.tellg();
                     outFile << lineo << '\n';
                 } else {
-                    boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: first character of strange line: " 
-                        << static_cast<unsigned char>(lineo[0]) << std::endl;    
+                    // boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: first character of strange line: " << static_cast<unsigned char>(lineo[0]) << std::endl;    
                 }
             } else {
                 boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: skipping empty line" << std::endl;
@@ -222,13 +214,118 @@ void Manager::init_system_logs() {
 
 void Manager::write_log_to_file(std::string log) {
 
+    std::string newlog = "[" + timeSinceBoot() + "] " + "LCR: " + log + "\n";
+
     system_logs << "[" << timeSinceBoot() << "] " << "LCR: " << log << std::endl;
+
+    newlog_string += newlog;
 
     trim_log();
 
 }
 
-void Manager::trim_log() {
+void Manager::write_logs_to_flash() 
+{
+
+    int fd = open("/dev/mtd4", O_RDWR | O_SYNC);
+    if (fd < 0) {
+        boot_dbgfile << "Failed to open /dev/mtd4: " << strerror(errno) << std::endl;
+        return;
+    }
+
+    mtd_info_t mtd_info;
+    if (ioctl(fd, MEMGETINFO, &mtd_info) != 0) {
+        boot_dbgfile << "Failed to get MTD info: " << strerror(errno) << std::endl;
+        close(fd);
+        return;
+    }
+
+    if (!(mtd_info.flags & MTD_WRITEABLE)) {
+        boot_dbgfile << "MTD is not writable" << std::endl;
+        close(fd);
+        return;
+    }
+
+    size_t erase_size = mtd_info.erasesize;
+    size_t data_size = newlog_string.size();
+    off_t start_offset = offset;
+    off_t end_offset = start_offset + data_size - 1;
+
+    if (end_offset >= static_cast<off_t>(mtd_info.size)) {
+        boot_dbgfile << "Data would exceed device size" << std::endl;
+        close(fd);
+        return;
+    }
+
+    // Calculate blocks to erase
+    off_t start_block = start_offset & ~(erase_size - 1);
+    off_t end_block = end_offset & ~(erase_size - 1);
+
+    for (off_t block = start_block; block <= end_block; block += erase_size) {
+        // Read the block to check its contents
+        std::vector<uint8_t> buffer(erase_size);
+        lseek(fd, block, SEEK_SET);
+        ssize_t read_bytes = read(fd, buffer.data(), erase_size);
+        if (read_bytes != static_cast<ssize_t>(erase_size)) {
+            boot_dbgfile << "Failed to read block at " << block << ": " << strerror(errno) << std::endl;
+            close(fd);
+            return;
+        }
+
+        // Check if the block has any characters other than 0xFF (i.e., has data)
+        bool has_other_than_ff = false;
+        for (const auto& b : buffer) {
+            if (b != 0xFF) {
+                has_other_than_ff = true;
+                break;
+            }
+        }
+
+        // Do not erase if it has characters other than 0xFF
+        if (has_other_than_ff) {
+            continue;
+        }
+
+        erase_info_t erase;
+        erase.start = block;
+        erase.length = erase_size;
+
+        if (ioctl(fd, MEMUNLOCK, &erase) != 0) {
+            boot_dbgfile << "Unlock failed for block at " << block << ": " << strerror(errno) << std::endl;
+            if (errno != ENOTSUP) {
+                close(fd);
+                return;
+            }
+        }
+
+        if (ioctl(fd, MEMERASE, &erase) != 0) {
+            boot_dbgfile << "Erase failed for block at " << block << ": " << strerror(errno) << std::endl;
+            close(fd);
+            return;
+        }
+    }
+
+    lseek(fd, start_offset, SEEK_SET);
+    ssize_t written = write(fd, newlog_string.data(), data_size);
+    if (written < 0) {
+        boot_dbgfile << "Write failed: " << strerror(errno) << " (errno: " << errno << ")" << std::endl;
+    } else if (written != static_cast<ssize_t>(data_size)) {
+        boot_dbgfile << "Write incomplete: wrote " << written << " of " << data_size << " bytes" << std::endl;
+    } else {
+        update_last_append_offset(start_offset + data_size);
+    }
+
+    close(fd);
+    newlog_string = "";
+}
+
+void Manager::update_last_append_offset(off_t new_offset) 
+{
+    offset = new_offset;
+}
+
+void Manager::trim_log() 
+{
 
     // boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: trimming log now..." << std::endl;
 
@@ -275,8 +372,9 @@ void Manager::trim_log() {
 
 }
 
-void Manager::write_heartbeat() {
-    update_readings();
+void Manager::write_heartbeat() 
+{
+    update_readings(1);
     std::string ADClog;
     ADClog = "System heartbeat... ";
     for (const auto& ADC : ADCs) {
@@ -290,6 +388,38 @@ void Manager::write_heartbeat() {
 
 Manager::Manager()
 {
+    configJson = readJson("/usr/share/lcr_configs/bus_devices.json");
+
+    ADCpaths paths;
+
+    std::string stub = "/sys/bus/iio/devices/";
+    std::string directory;
+
+    for (auto& adc_dir : configJson["adcsensors"].items()) {
+        phosphor::logging::log<phosphor::logging::level::INFO>(("ADC_sensor directory " + adc_dir.key()).c_str());
+        boot_dbgfile << "[" << currentTimestamp() << "] " << adc_dir.key() << " bus: " << configJson["adcsensors"][adc_dir.key()]["bus"] << std::endl;
+        if (configJson["adcsensors"][adc_dir.key()]["bus"] == 0 && configJson["adcsensors"][adc_dir.key()]["address"] == 0) { // bus and address is 0, this is the vpx bus
+            if (!std::filesystem::is_directory(stub + adc_dir.key())) {
+                stub += "iio:device0";
+                directory = adc_dir.key();
+                boot_dbgfile << "[" << currentTimestamp() << "] " << adc_dir.key() << " does not exist, using default" << std::endl;
+                break;
+            }
+            stub += adc_dir.key();
+            directory = adc_dir.key();
+            boot_dbgfile << "[" << currentTimestamp() << "] " << adc_dir.key() << " bus and address are 0" << std::endl;
+        }
+    }
+
+    paths.V12path     = stub + "/in_voltage9_raw";
+    paths.V3_3path    = stub + "/in_voltage10_raw";
+    paths.V5path      = stub + "/in_voltage11_raw";
+    paths.V3_3Auxpath = stub + "/in_voltage12_raw";
+    paths.Vp12Auxpath = stub + "/in_voltage13_raw";
+    paths.Vn12Auxpath = stub + "/in_voltage14_raw";
+
+    fancontrol = configJson["fancontrol"];
+
     temp_service_status = false;
     voltage_service_status = false;
     fan_controller_service_status = false;
@@ -299,25 +429,23 @@ Manager::Manager()
 
     init_system_logs();
 
-    write_log_to_file("Initializing system logs...");
     write_log_to_file("-----------------------------------------------------------------------------------------------------------------------");
     write_log_to_file("CHASSIS MANAGER BOOTUP");
-    write_log_to_file("BOOTUP LOGS BEGIN HERE");
+    write_log_to_file("Chassis name detected: " + configJson["name"].get<std::string>());
     write_log_to_file("FPGA has finished boot. Kernel booting has begun. These logs are for the BOOT SEQUENCE AND MANAGER application.");
-    write_log_to_file("This application manages the System Reset and PS enable signals.");
+    write_log_to_file("This application manages the System Reset and PS inhibit signals.");
     write_log_to_file("Once voltages are nominal and services are active, the system reset is released, allowing the cards to boot.");
     write_log_to_file("-----------------------------------------------------------------------------------------------------------------------");
 
     limitJson = readJson("/usr/share/thresholds/thresholds.json");
 
-    ADCpaths ADCpaths;
     
-    ADCs.push_back(std::make_unique<ADC_element>("12V_Rail", ADCpaths.V12path, 12.0));
-    ADCs.push_back(std::make_unique<ADC_element>("3_3V_Rail", ADCpaths.V3_3path, 3.3));
-    ADCs.push_back(std::make_unique<ADC_element>("5V_Rail", ADCpaths.V5path, 5.0));
-    ADCs.push_back(std::make_unique<ADC_element>("3_3auxV_Rail", ADCpaths.V3_3Auxpath, 3.3));
-    ADCs.push_back(std::make_unique<ADC_element>("12pauxV_Rail", ADCpaths.Vp12Auxpath, 12.0));
-    ADCs.push_back(std::make_unique<ADC_element>("12nauxV_Rail", ADCpaths.Vn12Auxpath, 12.0));
+    ADCs.push_back(std::make_unique<ADC_element>("12V_Rail",     paths.V12path,     12.0,  configJson["adcsensors"][directory.c_str()]["12V_Rail"]["present"]));
+    ADCs.push_back(std::make_unique<ADC_element>("3_3V_Rail",    paths.V3_3path,    3.3,   configJson["adcsensors"][directory.c_str()]["3_3V_Rail"]["present"]));
+    ADCs.push_back(std::make_unique<ADC_element>("5V_Rail",      paths.V5path,      5.0,   configJson["adcsensors"][directory.c_str()]["5V_Rail"]["present"]));
+    ADCs.push_back(std::make_unique<ADC_element>("3_3auxV_Rail", paths.V3_3Auxpath, 3.3,   configJson["adcsensors"][directory.c_str()]["3_3auxV_Rail"]["present"]));
+    ADCs.push_back(std::make_unique<ADC_element>("12pauxV_Rail", paths.Vp12Auxpath, 12.0,  configJson["adcsensors"][directory.c_str()]["12pauxV_Rail"]["present"]));
+    ADCs.push_back(std::make_unique<ADC_element>("12nauxV_Rail", paths.Vn12Auxpath, -12.0, configJson["adcsensors"][directory.c_str()]["12nauxV_Rail"]["present"]));
 
     calculate_cs();
 
@@ -329,15 +457,29 @@ Manager::Manager()
     sysreset.name="sysreset";
 
     ps_enable.input=false;
-    ps_enable.chip=2;
+    ps_enable.chip=3;
     ps_enable.line=3;
     ps_enable.status=0;
     ps_enable.dbusflag=false;
     ps_enable.name="psenable";
 
+    ps_inhibit1.input=false;
+    ps_inhibit1.chip=3;
+    ps_inhibit1.line=2;
+    ps_inhibit1.status=0;
+    ps_inhibit1.dbusflag=false;
+    ps_inhibit1.name="ps1inh";
+
+    ps_inhibit2.input=false;
+    ps_inhibit2.chip=3;
+    ps_inhibit2.line=1;
+    ps_inhibit2.status=0;
+    ps_inhibit2.dbusflag=false;
+    ps_inhibit2.name="ps2inh";
+
     switch_gpio.input=true;
     switch_gpio.chip=0;
-    switch_gpio.line=6;
+    switch_gpio.line=0;
     switch_gpio.status=0;
     switch_gpio.name="switch_gpio";
 
@@ -353,13 +495,21 @@ Manager::~Manager()
     ;
 }
 
-void Manager::calculate_cs() {
+void Manager::calculate_cs() 
+{
     for (const auto& ADC : ADCs) {
         ADC->scale_coeff = (ADC->V_target / 2047);
     }
 }
 
-bool Manager::wait_for_switch() {
+bool Manager::getfancontrol()
+{
+    return fancontrol;
+}
+
+bool Manager::wait_for_switch() 
+{
+    watch_services();
     try {
         // Open the GPIO chip
         gpiod::chip chip("gpiochip" + std::to_string(switch_gpio.chip));
@@ -383,8 +533,6 @@ bool Manager::wait_for_switch() {
             return true;
         }
 
-        boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: switch is currently off" << std::endl;
-
         line.release();
         return false;
     } catch (const std::exception& e) {
@@ -393,7 +541,8 @@ bool Manager::wait_for_switch() {
     }
 }
 
-bool Manager::set_alarm_gpio() {
+bool Manager::set_alarm_gpio() 
+{
     try {
         // Open the GPIO chip
         gpiod::chip chip("gpiochip" + std::to_string(switch_gpio.chip));
@@ -416,44 +565,52 @@ bool Manager::set_alarm_gpio() {
     }
 }
 
-bool Manager::update_readings() {
+bool Manager::update_readings(int num) 
+{
 
     bool bootflag = false;
 
     for (const auto& ADC : ADCs) {
-        // boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: reading value: ";
-        ADC->raw_reading = std::stoi(readFile(ADC->path));
-        ADC->V_current = ADC->scale_coeff * ADC->raw_reading;
-        double lowthresh = limitJson[ADC->name]["min"];
-        double highthresh = limitJson[ADC->name]["max"];
-        if (ADC->V_current > lowthresh && ADC->V_current < highthresh) {
-            // boot_dbgfile << "[" << currentTimestamp() << "] " << ADC->name << " is safe at reading " << ADC->V_current << std::endl;
-            ADC->safe = true;
-        } else {
-            boot_dbgfile << "[" << currentTimestamp() << "] " << ADC->name << " is not safe at reading " << ADC->V_current << std::endl;
-            write_log_to_file("Voltage monitoring: " + ADC->name + " is unsafe at reading " + std::to_string(ADC->V_current));
-            ADC->safe = false;
-            bootflag = false;
-            return bootflag;
+        boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: ADC path: " << ADC->path << std::endl;
+        boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: reading value: " << readFile(ADC->path) << std::endl;
+        if (ADC->present) {
+            ADC->raw_reading = std::stoi(readFile(ADC->path));
+            ADC->V_current = ADC->scale_coeff * ADC->raw_reading;
+            double lowthresh = limitJson[ADC->name]["critmin"];
+            double highthresh = limitJson[ADC->name]["critmax"];
+            if (std::abs(ADC->V_current) > std::abs(lowthresh) && std::abs(ADC->V_current) < std::abs(highthresh)) {
+                // boot_dbgfile << "[" << currentTimestamp() << "] " << ADC->name << " is safe at reading " << ADC->V_current << std::endl;
+                ADC->safe = true;
+            } else {
+                boot_dbgfile << "[" << currentTimestamp() << "] " << ADC->name << " is not safe at reading " << ADC->V_current << std::endl;
+                if (num % 15 == 0) {
+                    write_log_to_file("Voltage monitoring: " + ADC->name + " is unsafe at reading " + std::to_string(ADC->V_current));
+                }
+                ADC->safe = false;
+                bootflag = false;
+                return bootflag;
+            }
         }
     }
 
     for (const auto& ADC : ADCs) {
-        if (ADC->safe == false) {
-            boot_dbgfile << "[" << currentTimestamp() << "] " << ADC->name << " is not safe at reading " << ADC->V_current << std::endl;
-            bootflag = false;
-            return bootflag;
+        if (ADC->present) {
+            if (ADC->safe == false) {
+                boot_dbgfile << "[" << currentTimestamp() << "] " << ADC->name << " is not safe at reading " << ADC->V_current << std::endl;
+                bootflag = false;
+                return bootflag;
+            }
         }
     }
 
     bootflag = true;
     // boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: bootflag is true" << std::endl;
     
-    
     return bootflag;
 }
 
-ADC_element* Manager::getSensorByName(const std::string& name) {
+ADC_element* Manager::getSensorByName(const std::string& name) 
+{
     for (const auto& ADC : ADCs) {
         if (ADC->name == name) {
             return ADC.get();
@@ -462,7 +619,8 @@ ADC_element* Manager::getSensorByName(const std::string& name) {
     return nullptr;
 }
 
-bool Manager::set_ps() {
+bool Manager::set_ps() 
+{
     try {
         // Open the GPIO chip
         gpiod::chip chip("gpiochip" + std::to_string(ps_enable.chip));
@@ -487,7 +645,60 @@ bool Manager::set_ps() {
     }
 }
 
-bool Manager::unset_ps() {
+bool Manager::set_ps_inh1() 
+{
+    try {
+        // Open the GPIO chip
+        gpiod::chip chip("gpiochip" + std::to_string(ps_inhibit1.chip));
+        
+        // Get the line
+        gpiod::line line = chip.get_line(ps_inhibit1.line);
+    
+        boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: setting ps inh1" << std::endl;
+        // Request line as output
+        line.request({"setgpio", gpiod::line_request::DIRECTION_OUTPUT, 0}, 1);
+        ps_inhibit1.status=1;
+        write_log_to_file("Setting Power Supply inhibit 1 pin");
+        boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: exiting set ps inh1" << std::endl;
+        line.release();
+
+        ps_inhibit1.dbusflag=true;
+
+        return true;
+    } catch (const std::exception& e) {
+        boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: Error in GPIO operations: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool Manager::set_ps_inh2() 
+{
+    try {
+        // Open the GPIO chip
+        gpiod::chip chip("gpiochip" + std::to_string(ps_inhibit2.chip));
+        
+        // Get the line
+        gpiod::line line = chip.get_line(ps_inhibit2.line);
+    
+        boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: setting ps inh2" << std::endl;
+        // Request line as output
+        line.request({"setgpio", gpiod::line_request::DIRECTION_OUTPUT, 0}, 1);
+        ps_inhibit2.status=1;
+        write_log_to_file("Setting Power Supply inhibit 2 pin");
+        boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: exiting set ps inh2" << std::endl;
+        line.release();
+
+        ps_inhibit2.dbusflag=true;
+
+        return true;
+    } catch (const std::exception& e) {
+        boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: Error in GPIO operations: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool Manager::unset_ps() 
+{
     try {
         // Open the GPIO chip
         gpiod::chip chip("gpiochip" + std::to_string(ps_enable.chip));
@@ -512,12 +723,14 @@ bool Manager::unset_ps() {
     }
 }
 
-bool Manager::get_fan_controller_status() {
+bool Manager::get_fan_controller_status() 
+{
     watch_services();
     return fan_controller_service_status;
 }
 
-bool Manager::set_sr() {
+bool Manager::set_sr() 
+{
     write_log_to_file("Voltage monitoring: voltages within range, driving system reset pin to begin chassis boot");
     try {
         // Open the GPIO chip
@@ -543,44 +756,47 @@ bool Manager::set_sr() {
     }
 }
 
-void Manager::write_logs_to_flash() {
-    // boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: writing logs to qspi flash" << std::endl;
-    system("flashcp /system_logs.log /dev/mtd4");
-}
-
-bool Manager::check_temp_service(){
+bool Manager::check_temp_service()
+{
     return isServiceActive("LCR_temp_sensors.service");
 }
 
-bool Manager::check_voltage_service(){
+bool Manager::check_voltage_service()
+{
     return isServiceActive("LCR_ADC_sensors.service");
 }
 
-bool Manager::check_fan_controller_service(){
+bool Manager::check_fan_controller_service()
+{
     return isServiceActive("LCR_fan_controller.service");
 }
 
-bool Manager::check_mandatory_sensor_service(){
+bool Manager::check_mandatory_sensor_service()
+{
     return isServiceActive("LCR_Mandatory_Sensors.service");
 }
 
-bool Manager::check_gpio_service(){
+bool Manager::check_gpio_service()
+{
     return isServiceActive("LCR_GPIO_Mon.service");    
 }
 
-bool Manager::check_ipmi_host_service(){
+bool Manager::check_ipmi_host_service()
+{
     return isServiceActive("phosphor-ipmi-host.service");
 }
 
-void Manager::log_servicechange(bool status) {
+void Manager::log_servicechange(std::string* log, bool status) 
+{
     if (status == false) {
-        system_logs << " to OFF" << std::endl;
+        *log += " to OFF";
     } else {
-        system_logs << " to ON" << std::endl;
+        *log += " to ON";
     }
 }
 
-void Manager::watch_services() {
+void Manager::watch_services() 
+{
     // boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: watching service statuses" << std::endl;
     bool temp_temp_status = check_temp_service();
     bool temp_voltage_status = check_voltage_service();
@@ -592,39 +808,52 @@ void Manager::watch_services() {
     ipmi_service_status = temp_ipmi_status;
 
     if (temp_temp_status != temp_service_status) {
-        system_logs << "[" << timeSinceBoot() << "] " << "LCR: Temperature monitoring service status changed";
-        log_servicechange(temp_temp_status);
+        std::string log;
+        log += "Temperature monitoring service status changed";
+        log_servicechange(&log, temp_temp_status);
         temp_service_status = temp_temp_status;
+        write_log_to_file(log);
     }
     if (temp_voltage_status != voltage_service_status) {
-        system_logs << "[" << timeSinceBoot() << "] " << "LCR: Voltage monitoring service status changed";
-        log_servicechange(temp_voltage_status);
+        std::string log;
+        log += "Voltage monitoring service status changed";
+        log_servicechange(&log, temp_voltage_status);
         voltage_service_status = temp_voltage_status;
+        write_log_to_file(log);
     }
     if (temp_fan_controller_status != fan_controller_service_status) {
-        system_logs << "[" << timeSinceBoot() << "] " << "LCR: Fan Controller service status changed";
-        log_servicechange(temp_fan_controller_status);
+        std::string log;
+        log += "Fan Controller service status changed";
+        log_servicechange(&log, temp_fan_controller_status);
         fan_controller_service_status = temp_fan_controller_status;
+        write_log_to_file(log);
     }
     if (temp_mandatory_sensor_status != mandatory_sensor_service_status) {
-        system_logs << "[" << timeSinceBoot() << "] " << "LCR: Mandatory Sensors service status changed";
-        log_servicechange(temp_mandatory_sensor_status);
+        std::string log;
+        log += "Mandatory Sensors service status changed";
+        log_servicechange(&log, temp_mandatory_sensor_status);
         mandatory_sensor_service_status = temp_mandatory_sensor_status;
+        write_log_to_file(log);
     }
     if (temp_gpio_status != gpio_service_status) {
-        system_logs << "[" << timeSinceBoot() << "] " << "LCR: GPIO monitoring service status changed";
-        log_servicechange(temp_gpio_status);
+        std::string log;
+        log += "GPIO monitoring service status changed";
+        log_servicechange(&log, temp_gpio_status);
         gpio_service_status = temp_gpio_status;
+        write_log_to_file(log);
     }
     if (temp_ipmi_status != ipmi_service_status) {
-        system_logs << "[" << timeSinceBoot() << "] " << "LCR: IPMI host service status changed";
-        log_servicechange(temp_ipmi_status);
+        std::string log;
+        log += "IPMI host service status changed";
+        log_servicechange(&log, temp_ipmi_status);
         ipmi_service_status = temp_ipmi_status;
+        write_log_to_file(log);
     }
 
 }
 
-void Manager::watch_gpios() {
+void Manager::watch_gpios() 
+{
     std::string interface = "xyz.openbmc_project.Sensor.Value";
     std::string property = "Value";
     while(true){
@@ -633,18 +862,34 @@ void Manager::watch_gpios() {
             auto bus = sdbusplus::bus::new_default();
 
             int ps_value = ps_enable.status;
+            int inh1_value = ps_inhibit1.status;
+            int inh2_value = ps_inhibit2.status;
             int sr_value = sysreset.status;
     
             std::string ps_name = ps_enable.name;
             std::string ps_path = "/xyz/openbmc_project/gpio/" + ps_name;
+
+            std::string psinh1_name = ps_inhibit1.name;
+            std::string psinh1_path = "/xyz/openbmc_project/gpio/" + psinh1_name;
+
+            std::string psinh2_name = ps_inhibit2.name;
+            std::string psinh2_path = "/xyz/openbmc_project/gpio/" + psinh2_name;
     
             std::string sr_name = sysreset.name;
             std::string sr_path = "/xyz/openbmc_project/gpio/" + sr_name;
     
             try {
                 if (ps_enable.dbusflag){
-                    phosphor::interface::util::setProperty<double>(bus, ps_path, interface, property, std::move((double)ps_value));
+                    phosphor::interface::util::setProperty<int>(bus, ps_path, interface, property, std::move(ps_value));
                     ps_enable.dbusflag=false;
+                }
+                if (ps_inhibit1.dbusflag){
+                    phosphor::interface::util::setProperty<int>(bus, psinh1_path, interface, property, std::move(inh1_value));
+                    ps_inhibit1.dbusflag=false;
+                }
+                if (ps_inhibit2.dbusflag){
+                    phosphor::interface::util::setProperty<int>(bus, psinh2_path, interface, property, std::move(inh2_value));
+                    ps_inhibit2.dbusflag=false;
                 }
             } catch (const std::exception& e) {
                 boot_dbgfile << "[" << currentTimestamp() << "] " << "Failed to set property for " << ps_name << ": " << e.what() << std::endl;
@@ -652,7 +897,7 @@ void Manager::watch_gpios() {
             
             try {
                 if (sysreset.dbusflag){
-                    phosphor::interface::util::setProperty<double>(bus, sr_path, interface, property, std::move((double)sr_value));
+                    phosphor::interface::util::setProperty<int>(bus, sr_path, interface, property, std::move(sr_value));
                     sysreset.dbusflag = false;
                 }
             } catch (const std::exception& e) {
@@ -663,7 +908,8 @@ void Manager::watch_gpios() {
     }
 }
 
-void Manager::watch_alarms() {
+void Manager::watch_alarms() 
+{
     
     boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: watching alarms..." << std::endl;
     while(ipmi_service_status == false) {
@@ -693,7 +939,7 @@ void Manager::watch_alarms() {
     std::string voltage_name;
     while(alarms == false) {
         watch_services();
-        // boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: checking temperature alarms" << std::endl;
+        boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: checking temperature alarms" << std::endl;
         temp_alarm = false;
         try {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -709,7 +955,7 @@ void Manager::watch_alarms() {
                         break;
                     }
                 } catch (const std::exception& e) {
-                    // boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: Error getting temperature alarm properties for " << path << ": " << e.what() << std::endl;
+                    boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: Error getting temperature alarm properties for " << path << ": " << e.what() << std::endl;
                     // Continue to next path, treating this sensor as no alarm
                 }
             }
@@ -718,7 +964,7 @@ void Manager::watch_alarms() {
             // Treat as no alarm if subtree fetch fails
         }
         
-        // boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: checking voltage alarms" << std::endl;
+        boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: checking voltage alarms" << std::endl;
         voltage_alarm = false;
         try {
             auto voltage_paths = phosphor::interface::util::getSubTreePathsRaw(bus, voltage_stub, threshold_interface, 0);
@@ -742,8 +988,8 @@ void Manager::watch_alarms() {
             // Treat as no alarm if subtree fetch fails
         }
         alarms = (temp_alarm || voltage_alarm) ? true : false;
-        // boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: temperature alarm: " << (temp_alarm ? "ON" : "OFF") << std::endl;
-        // boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: voltage alarm: " << (voltage_alarm ? "ON" : "OFF") << std::endl;
+        boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: temperature alarm: " << (temp_alarm ? "ON" : "OFF") << std::endl;
+        boot_dbgfile << "[" << currentTimestamp() << "] " << "LCR:BOOT: voltage alarm: " << (voltage_alarm ? "ON" : "OFF") << std::endl;
 
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
 

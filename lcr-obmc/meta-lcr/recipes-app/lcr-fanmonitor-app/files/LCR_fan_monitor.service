@@ -1,0 +1,11 @@
+[Unit]
+Description=Fan Monitor Service
+After=network.target xyz.openbmc_project.EntityManager.service
+
+[Service]
+ExecStart=/usr/bin/lcr_fan_monitor
+Restart=always
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

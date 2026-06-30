@@ -13,7 +13,7 @@ S = "${WORKDIR}"
 # testing
 inherit pkgconfig systemd
 
-DEPENDS += "sdbusplus phosphor-dbus-interfaces systemd phosphor-logging fmt nlohmann-json"
+DEPENDS += "sdbusplus phosphor-dbus-interfaces systemd phosphor-logging fmt nlohmann-json boost"
 
 do_compile() {
     ${CXX} ${CXXFLAGS} -std=c++20 ${LDFLAGS} \
@@ -41,10 +41,12 @@ do_install() {
     # Install the systemd service file
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/LCR_ADC_sensors.service ${D}${systemd_system_unitdir}/LCR_ADC_sensors.service
+
 }
 
 PROVIDES = "lcr_adc_sensors"
 RPROVIDES:${PN} = "lcr_adc_sensors"
+
 
 SYSTEMD_SERVICE:${PN} = "LCR_ADC_sensors.service"
 

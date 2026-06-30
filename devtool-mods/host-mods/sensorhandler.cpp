@@ -441,7 +441,7 @@ ipmi::RspType<uint8_t, // sensorType
     ipmiGetSensorType(uint8_t sensorNumber)
 {
 
-
+    log<level::INFO>("INFO: sensorhandler ipmiGetSensorType enter ");
     uint8_t sensorType = find_type_for_sensor_number(sensorNumber);
 
     if (sensorType == 0)
@@ -569,6 +569,7 @@ ipmi::RspType<uint8_t, // sensor reading
     ipmiSensorGetSensorReading([[maybe_unused]] ipmi::Context::ptr& ctx,
                                uint8_t sensorNum)
 {
+    log<level::INFO>("INFO: sensorhandler ipmiSensorGetSensorReading enter ");
     if (sensorNum == 0xFF)
     {
         return ipmi::responseInvalidFieldRequest();
@@ -677,6 +678,7 @@ ipmi::RspType<uint8_t, // sensor reading
 get_sdr::GetSensorThresholdsResponse
     getSensorThresholds(ipmi::Context::ptr& ctx, uint8_t sensorNum)
 {
+    log<level::INFO>("INFO: sensorhandler getSensorThresholds enter ");
 
     get_sdr::GetSensorThresholdsResponse resp{};
     constexpr auto warningThreshIntf =
@@ -1046,6 +1048,7 @@ ipmi::RspType<uint8_t, // respcount
  */
 ipmi::RspType<uint16_t> ipmiSensorReserveSdr()
 {
+    log<level::INFO>("INFO: sensorhandler ipmiSensorReserveSdr enter ");
     // A constant reservation ID is okay until we implement add/remove SDR.
     constexpr uint16_t reservationID = 1;
 
@@ -1100,7 +1103,7 @@ ipmi_ret_t populate_record_from_dbus(get_sdr::SensorDataFullRecordBody* body,
                                      const ipmi::sensor::Info* info,
                                      ipmi_data_len_t)
 {
-
+    log<level::INFO>("LCR:IPMID[ENTRY] populate_record_from_dbus enter");
     /* Functional sensor case */
     if (isAnalogSensor(info->propertyInterfaces.begin()->first))
     {
@@ -1119,6 +1122,8 @@ ipmi_ret_t populate_record_from_dbus(get_sdr::SensorDataFullRecordBody* body,
     /* ID string */
     auto id_string = info->sensorName;
 
+    log<level::INFO>(("LCR:IPMID[ENTRY] populate_record_from_dbus id_string " + id_string).c_str());
+
     if (id_string.empty())
     {
         id_string = info->sensorNameFunc(*info);
@@ -1136,6 +1141,7 @@ ipmi_ret_t populate_record_from_dbus(get_sdr::SensorDataFullRecordBody* body,
     strncpy(body->id_string, id_string.c_str(),
             get_sdr::body::get_id_strlen(body));
 
+    log<level::INFO>("LCR:IPMID[ENTRY] populate_record_from_dbus exit");
     return IPMI_CC_OK;
 };
 
@@ -1309,6 +1315,7 @@ ipmi_ret_t ipmi_sen_get_sdr(ipmi_netfn_t, ipmi_cmd_t, ipmi_request_t request,
                             ipmi_response_t response, ipmi_data_len_t data_len,
                             ipmi_context_t)
 {
+    log<level::INFO>("LCR:IPMID[ENTRY] ipmi_sen_get_sdr enter");
 
     ipmi_ret_t ret = IPMI_CC_OK;
     get_sdr::GetSdrReq* req = (get_sdr::GetSdrReq*)request;
@@ -1415,6 +1422,7 @@ ipmi_ret_t ipmi_sen_get_sdr(ipmi_netfn_t, ipmi_cmd_t, ipmi_request_t request,
     *data_len +=
         sizeof(resp->next_record_id_lsb) + sizeof(resp->next_record_id_msb);
     
+    log<level::INFO>("LCR:IPMID[ENTRY] ipmi_sen_get_sdr exit");
     return ret;
 }
 
@@ -1430,6 +1438,7 @@ ipmi_ret_t ipmicmdPlatformEvent(ipmi_netfn_t, ipmi_cmd_t,
                                 ipmi_request_t request, ipmi_response_t,
                                 ipmi_data_len_t dataLen, ipmi_context_t)
 {
+    log<level::INFO>("INFO: sensorhandler ipmicmdPlatformEvent enter ");
 
     uint16_t generatorID;
     size_t count;
@@ -1510,6 +1519,7 @@ ipmi_ret_t ipmicmdPlatformEvent(ipmi_netfn_t, ipmi_cmd_t,
 
 void register_netfn_sen_functions()
 {
+    log<level::INFO>("register_netfn_sen_functions enter");
     // Handlers with dbus-sdr handler implementation.
     // Do not register the hander if it dynamic sensors stack is used.
 

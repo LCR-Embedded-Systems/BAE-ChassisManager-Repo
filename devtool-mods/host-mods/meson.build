@@ -280,7 +280,9 @@ if not get_option('dynamic-sensors').disabled() or not get_option('tests').disab
     version: meson.project_version(),
     override_options: ['b_lundef=false'],
     install: true,
-    install_dir: get_option('libdir') / 'ipmid-providers')
+    install_dir: get_option('libdir') / 'ipmid-providers',
+    install_rpath: '$ORIGIN/../host-ipmid'
+  )
 endif
 
 if not get_option('tests').disabled()

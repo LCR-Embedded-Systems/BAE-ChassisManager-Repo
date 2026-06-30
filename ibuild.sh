@@ -13,6 +13,9 @@ QUEUEFILE="$QUEUEDIR/${TIMESTAMP}_$$"
 # Add to queue
 touch "$QUEUEFILE" || { echo "Error: Failed to create queue file."; exit 1; }
 
+# Set up trap to delete queue file on Ctrl+C (SIGINT)
+trap 'rm -f "$QUEUEFILE"; echo " Build interrupted. Queue file cleaned up."; exit 130' INT
+
 # Function to count builds ahead (files with earlier timestamps)
 builds_ahead() {
     # List and sort files by name (timestamp order)
@@ -47,19 +50,38 @@ echo "Acquiring lock. Please wait until other builds are finished..."
     done || { echo "Error: Failed to acquire lock."; rm "$QUEUEFILE"; exit 1; }
 
     # Once lock is acquired, we're building
-    echo "\nLock acquired. Starting build (your position: 0 ahead)."
+    printf "\nLock acquired. Starting build (your position: 0 ahead).\n\n"
+
+    cleaned=0
+    for qfile in $(ls -1 "$QUEUEDIR"/[0-9]*_[0-9]* 2>/dev/null | sort); do
+        filename=$(basename "$qfile")
+        if [[ "$filename" < "${TIMESTAMP}_$$" ]]; then
+            echo "  Removing stale: $filename"
+            rm -f "$qfile"
+            ((cleaned++))
+        else
+            break  # everything after this is ours or newer — stop
+        fi
+    done
+
+    if [ $cleaned -gt 0 ]; then
+        echo "  → Cleaned up $cleaned stale queue file(s)."
+    else
+        echo "  → No stale queue files found."
+    fi
 
     BRANCH="$1"
 
     if [ -n "$BRANCH" ]; then
         echo "Switching to branch: $BRANCH"
         git fetch
-        git checkout "$BRANCH" || { echo "Error: Failed to checkout branch $BRANCH"; rm "$QUEUEFILE"; exit 1; }
+        git checkout "$BRANCH" || { echo "Error: Failed to checkout branch $BRANCH"; exit 1; }
     else
         echo "No branch specified; using current branch: $(git branch --show-current)"
+        BRANCH=$(git branch --show-current)
     fi
 
-    git fetch && git pull && ./patchmover.sh && ./buildImage.sh
+    git fetch && git reset --hard origin/$BRANCH && ./patchmover.sh && ./buildImage.sh
 
 ) 200>"$LOCKFILE"
 

@@ -3,15 +3,15 @@
         {
             "type": "ipmb",
             "slave-path": "/dev/ipmb-0",
-            "bmc-addr": 64,
-            "remote-addr": 142,
+            "bmc-addr": 32,
+            "remote-addr": 132,
             "devIndex": 0
         },
         {
             "type": "ipmb",
             "slave-path": "/dev/ipmb-1",
-            "bmc-addr": 64,
-            "remote-addr": 142,
+            "bmc-addr": 32,
+            "remote-addr": 132,
             "devIndex": 1
         }
     ]

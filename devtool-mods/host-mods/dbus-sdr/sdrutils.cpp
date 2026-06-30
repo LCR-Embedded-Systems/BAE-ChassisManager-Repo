@@ -15,9 +15,10 @@
 */
 
 #include "dbus-sdr/sdrutils.hpp"
-
+#include <phosphor-logging/log.hpp>
 #include <optional>
 #include <unordered_set>
+#include <nlohmann/json.hpp>
 
 #ifdef FEATURE_HYBRID_SENSORS
 
@@ -32,12 +33,29 @@ extern const IdInfoMap sensors;
 
 #endif
 
+using namespace phosphor::logging;
+
 namespace details
 {
+
+nlohmann::json readJson(std::string path) {
+    std::ifstream f(path);
+
+    nlohmann::json read;
+
+    try {
+        f >> read;
+    } catch (const nlohmann::json::parse_error& e) {
+        std::cerr << "JSON parse error: " << e.what() << std::endl;
+    }
+
+    return read;
+}
+
 uint16_t getSensorSubtree(std::shared_ptr<SensorSubTree>& subtree)
 {
 
-    log<level::INFO>("INFO: running get sensor subtree");
+    // log<level::INFO>("INFO: running get sensor subtree");
 
     static std::shared_ptr<SensorSubTree> sensorTreePtr;
     static uint16_t sensorUpdatedIndex = 0;
@@ -81,10 +99,6 @@ uint16_t getSensorSubtree(std::shared_ptr<SensorSubTree>& subtree)
         }
         catch (const sdbusplus::exception_t& e)
         {
-            phosphor::logging::log<phosphor::logging::level::ERR>(
-                "fail to update subtree",
-                phosphor::logging::entry("PATH=%s", path),
-                phosphor::logging::entry("WHAT=%s", e.what()));
             return false;
         }
         if constexpr (debug)
@@ -150,16 +164,61 @@ uint16_t getSensorSubtree(std::shared_ptr<SensorSubTree>& subtree)
     return sensorUpdatedIndex;
 }
 
+std::map<std::string, int> get_names_numbers(nlohmann::json sensor_json) {
+    std::map<std::string, int> names_numbers;
+
+    for (auto& temp_inst : sensor_json["tempsensors"].items()) {
+        // phosphor::logging::log<phosphor::logging::level::INFO>(("temperature directory " + temp_inst.key()).c_str());
+        names_numbers[sensor_json["tempsensors"][temp_inst.key()]["name"]] = sensor_json["tempsensors"][temp_inst.key()]["number"];
+    }
+    for (auto& adc_dir : sensor_json["adcsensors"].items()) {
+        for (auto& adc_inst : adc_dir.value().items()) {
+            // phosphor::logging::log<phosphor::logging::level::INFO>(("adc directory " + adc_inst.key()).c_str());
+            if (adc_inst.key() != "bus" && adc_inst.key() != "address") {
+                names_numbers[adc_inst.key()] = sensor_json["adcsensors"][adc_dir.key()][adc_inst.key()]["number"];
+            }
+        }
+    }
+    for (auto& fan_dir : sensor_json["fancontrollers"].items()) {
+        for (auto& fan_inst : fan_dir.value().items()) {
+            // phosphor::logging::log<phosphor::logging::level::INFO>(("fan_monitor directory " + fan_inst.key()).c_str());
+            if (fan_inst.key() != "bus" && fan_inst.key() != "address") {
+                names_numbers[fan_inst.key()] = sensor_json["fancontrollers"][fan_dir.key()][fan_inst.key()]["number"];
+            }
+        }
+    }
+    return names_numbers;
+}
+
+uint16_t getMaxSensorNum(std::map<std::string, int> sensor_map) {
+    int maxnum = 0;
+    for (const auto& [key, value] : sensor_map) {
+        maxnum = (value > maxnum) ? value : maxnum;
+    }
+    uint16_t mnum16 = static_cast<uint16_t>(maxnum);
+    return mnum16;
+}
+
+std::string get_sensor_name_from_path(std::string path) {
+    size_t pos = path.find_last_of('/');
+    std::string result;
+    if (pos != std::string::npos) {
+        result = path.substr(pos + 1); // take everything after last "/"
+    } else {
+        result = path; // no "/" found, take whole string
+    }
+    return result;
+}
+
 bool getSensorNumMap(std::shared_ptr<SensorNumMap>& sensorNumMap)
 {
-
-    log<level::INFO>("INFO: running get sensor num map");
+    // log<level::INFO>("INFO: getSensorNumMap enter");
 
     static std::shared_ptr<SensorNumMap> sensorNumMapPtr;
     bool sensorNumMapUpated = false;
     static uint16_t prevSensorUpdatedIndex = 0;
     std::shared_ptr<SensorSubTree> sensorTree;
-    uint16_t curSensorUpdatedIndex = details::getSensorSubtree(sensorTree);
+    uint16_t curSensorUpdatedIndex = getSensorSubtree(sensorTree);
     if (!sensorTree)
     {
         return sensorNumMapUpated;
@@ -173,14 +232,31 @@ bool getSensorNumMap(std::shared_ptr<SensorNumMap>& sensorNumMap)
     prevSensorUpdatedIndex = curSensorUpdatedIndex;
 
     sensorNumMapPtr = std::make_shared<SensorNumMap>();
-
-    uint16_t sensorNum = 0;
-    uint16_t sensorIndex = 0;
+    nlohmann::json configJson = readJson("/usr/share/lcr_configs/bus_devices.json");
+    std::map<std::string, int> m_sensor_names = get_names_numbers(configJson);
+    uint16_t sensorNum = getMaxSensorNum(m_sensor_names) + 1;
+    uint16_t sensorIndex = getMaxSensorNum(m_sensor_names) + 1;
     for (const auto& sensor : *sensorTree)
     {
-        sensorNumMapPtr->insert(
-            SensorNumMap::value_type(sensorNum, sensor.first));
-        sensorIndex++;
+        
+        std::string sensor_name = get_sensor_name_from_path(sensor.first);
+        if (m_sensor_names.find(sensor_name) != m_sensor_names.end()) {
+            // log<level::INFO>(("getSensorNumMap sensor " + sensor_name + " is in json at number " + std::to_string(m_sensor_names[sensor_name])).c_str());
+            // log<level::INFO>(("INFO: getSensorNumMap assigning number " + std::to_string(m_sensor_names[sensor_name]) + " to sensor " + std::string(sensor.first)).c_str());
+            sensorNumMapPtr->insert(
+                SensorNumMap::value_type(static_cast<uint16_t>(m_sensor_names[sensor_name]), sensor.first));
+        } else if (MandatorySensorNumbers.find(sensor_name) != MandatorySensorNumbers.end()) {
+            // log<level::INFO>(("getSensorNumMap sensor " + sensor_name + " is a mandatory sensor number").c_str());
+            uint8_t sensorNumMand = MandatorySensorNumbers.at(sensor_name);
+            // log<level::INFO>(("INFO: getSensorNumMap assigning number " + std::to_string(sensorNumMand) + " to sensor " + std::string(sensor.first)).c_str());
+            sensorNumMapPtr->insert(
+                SensorNumMap::value_type(static_cast<uint16_t>(sensorNumMand), sensor.first));
+        } else {
+            // log<level::INFO>(("INFO: getSensorNumMap assigning number " + std::to_string(sensorNum) + " to sensor " + std::string(sensor.first)).c_str());
+            sensorNumMapPtr->insert(
+                SensorNumMap::value_type(sensorNum, sensor.first));
+            sensorIndex++;
+        }
         if (sensorIndex == maxSensorsPerLUN)
         {
             sensorIndex = lun1Sensor0;
@@ -206,7 +282,7 @@ bool getSensorNumMap(std::shared_ptr<SensorNumMap>& sensorNumMap)
 bool getSensorSubtree(SensorSubTree& subtree)
 {
     std::shared_ptr<SensorSubTree> sensorTree;
-    details::getSensorSubtree(sensorTree);
+    ::details::getSensorSubtree(sensorTree);
     if (!sensorTree)
     {
         return false;
@@ -221,6 +297,7 @@ bool getSensorSubtree(SensorSubTree& subtree)
 ipmi::sensor::IdInfoMap::const_iterator
     findStaticSensor(const std::string& path)
 {
+    phosphor::logging::log<phosphor::logging::level::INFO>("findStaticSensor: enter and exit");
     return std::find_if(
         ipmi::sensor::sensors.begin(), ipmi::sensor::sensors.end(),
         [&path](const ipmi::sensor::IdInfoMap::value_type& findSensor) {
@@ -248,8 +325,20 @@ std::string getSensorTypeStringFromPath(const std::string& path)
     return path.substr(typeStart, typeEnd - typeStart);
 }
 
+std::string get_sensor_name_from_path(std::string path) {
+    size_t pos = path.find_last_of('/');
+    std::string result;
+    if (pos != std::string::npos) {
+        result = path.substr(pos + 1); // take everything after last "/"
+    } else {
+        result = path; // no "/" found, take whole string
+    }
+    return result;
+}
+
 uint8_t getSensorTypeFromPath(const std::string& path)
 {
+    // log<level::INFO>(("getSensorTypeFromPath path " + path).c_str());
     uint8_t sensorType = 0;
     std::string type = getSensorTypeStringFromPath(path);
     auto findSensor = sensorTypes.find(type.c_str());
@@ -259,13 +348,19 @@ uint8_t getSensorTypeFromPath(const std::string& path)
             static_cast<uint8_t>(std::get<sensorTypeCodes>(findSensor->second));
     } // else default 0x0 RESERVED
 
+    std::string sensor_name = get_sensor_name_from_path(path);
+    if (MandatorySensorNumberTypes.find(sensor_name) != MandatorySensorNumberTypes.end()) {
+        sensorType = 
+            static_cast<uint8_t>(MandatorySensorNumberTypes.at(sensor_name));
+    }
+
     return sensorType;
 }
 
 uint16_t getSensorNumberFromPath(const std::string& path)
 {
     std::shared_ptr<SensorNumMap> sensorNumMapPtr;
-    details::getSensorNumMap(sensorNumMapPtr);
+    ::details::getSensorNumMap(sensorNumMapPtr);
     if (!sensorNumMapPtr)
     {
         return invalidSensorNumber;
@@ -282,15 +377,27 @@ uint16_t getSensorNumberFromPath(const std::string& path)
     }
 }
 
+
 uint8_t getSensorEventTypeFromPath(const std::string& path)
 {
+    // phosphor::logging::log<phosphor::logging::level::INFO>(("getSensorEventTypeFromPath: enter for path " + path).c_str());
     uint8_t sensorEventType = 0;
     std::string type = getSensorTypeStringFromPath(path);
     auto findSensor = sensorTypes.find(type.c_str());
     if (findSensor != sensorTypes.end())
     {
+        // phosphor::logging::log<phosphor::logging::level::INFO>(("getSensorEventTypeFromPath: retrieving threshold for " + path + " with type " + std::string(findSensor->first)).c_str());
+        // phosphor::logging::log<phosphor::logging::level::INFO>(("getSensorEventTypeFromPath: the sensor vals are " + std::to_string(int(findSensor->second.first)) + " with type " + std::to_string(int(findSensor->second.second))).c_str());
+        /*
         sensorEventType = static_cast<uint8_t>(
             std::get<sensorEventTypeCodes>(findSensor->second));
+        */
+        sensorEventType = static_cast<uint8_t>(findSensor->second.second);
+    }
+
+    std::string sensor_name = get_sensor_name_from_path(path);
+    if (MandatorySensorNumberTypes.find(sensor_name) != MandatorySensorNumberTypes.end()) {
+        sensorEventType = static_cast<uint8_t>(MandatorySensorEventTypes.at(sensor_name));
     }
 
     return sensorEventType;
@@ -299,7 +406,7 @@ uint8_t getSensorEventTypeFromPath(const std::string& path)
 std::string getPathFromSensorNumber(uint16_t sensorNum)
 {
     std::shared_ptr<SensorNumMap> sensorNumMapPtr;
-    details::getSensorNumMap(sensorNumMapPtr);
+    ::details::getSensorNumMap(sensorNumMapPtr);
     if (!sensorNumMapPtr)
     {
         return std::string();
@@ -339,9 +446,11 @@ std::map<std::string, std::vector<std::string>>
     }
     catch (const std::exception& e)
     {
+        /*
         phosphor::logging::log<phosphor::logging::level::ERR>(
             "Failed to GetObject", phosphor::logging::entry("PATH=%s", path),
             phosphor::logging::entry("WHAT=%s", e.what()));
+            */
     }
 
     return interfacesResponse;
@@ -410,7 +519,7 @@ const std::string* getSensorConfigurationInterface(
         sensorInterfacesResponse)
 {
 
-    log<level::INFO>("INFO: running get sensor config interface");
+    // log<level::INFO>("INFO: running get sensor config interface");
     
     auto entityManagerService =
         sensorInterfacesResponse.find("xyz.openbmc_project.EntityManager");
@@ -451,6 +560,7 @@ void updateIpmiFromAssociation(
     const DbusInterfaceMap& sensorMap, uint8_t& entityId,
     uint8_t& entityInstance)
 {
+    // log<level::INFO>("updateIpmiFromAssociation: enter");
     namespace fs = std::filesystem;
 
     auto sensorAssociationObject =
@@ -478,7 +588,7 @@ void updateIpmiFromAssociation(
 
         return;
     }
-
+    // log<level::INFO>("updateIpmiFromAssociation: std::get associations");
     std::vector<Association> associationValues =
         std::get<std::vector<Association>>(associationObject->second);
 
@@ -514,11 +624,13 @@ void updateIpmiFromAssociation(
             entityInstanceProp = ipmiProperties.find("EntityInstance");
             if (entityIdProp != ipmiProperties.end())
             {
+                // log<level::INFO>("updateIpmiFromAssociation: std::get entity id prop first");
                 entityId = static_cast<uint8_t>(
                     std::get<uint64_t>(entityIdProp->second));
             }
             if (entityInstanceProp != ipmiProperties.end())
             {
+                // log<level::INFO>("updateIpmiFromAssociation: std::get entity id prop second");
                 entityInstance = static_cast<uint8_t>(
                     std::get<uint64_t>(entityInstanceProp->second));
             }
@@ -561,11 +673,13 @@ void updateIpmiFromAssociation(
         entityInstanceProp = configurationProperties.find("EntityInstance");
         if (entityIdProp != configurationProperties.end())
         {
+            // log<level::INFO>("updateIpmiFromAssociation: std::get entity id prop third");
             entityId =
                 static_cast<uint8_t>(std::get<uint64_t>(entityIdProp->second));
         }
         if (entityInstanceProp != configurationProperties.end())
         {
+            // log<level::INFO>("updateIpmiFromAssociation: std::get entity id prop fourth");
             entityInstance = static_cast<uint8_t>(
                 std::get<uint64_t>(entityInstanceProp->second));
         }

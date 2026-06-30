@@ -13,3 +13,5 @@ do_install:append(){
     install -m 0644 -D ${WORKDIR}/server.conf \
         ${D}${sysconfdir}/rsyslog.d/server.conf
 }
+
+PACKAGECONFIG:append = " imjournal"

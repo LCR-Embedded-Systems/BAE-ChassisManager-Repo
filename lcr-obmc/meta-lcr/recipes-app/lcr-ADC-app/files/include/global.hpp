@@ -29,11 +29,15 @@
 #include <xyz/openbmc_project/Common/error.hpp>
 #include <iostream>
 #include <nlohmann/json.hpp>
+#include <sdbusplus/asio/connection.hpp>
+#include <sdbusplus/asio/object_server.hpp>
+#include <boost/asio.hpp>
+#include <boost/asio/steady_timer.hpp>
+
+namespace fs = std::filesystem;
 
 
-extern std::ofstream ADC_dbgFile;
-
-std::string currentTimestamp();\
+std::string currentTimestamp();
 
 int obtain_raw_voltage(std::string path);
 

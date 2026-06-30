@@ -25,6 +25,8 @@ class CLI
         CLI();
         ~CLI();
 
+        void printsplash();
+
         int display_all();
 
         int display_fans();
@@ -33,7 +35,13 @@ class CLI
 
         int display_ADC();
 
+        int display_current();
+
+        int display_power();
+
         int display_alarms();
+
+        int display_services();
 
         int set_threshold(std::string type, std::string itemname, std::string highorlow, double value);
 

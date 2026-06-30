@@ -8,6 +8,9 @@
 #include <cstring>
 #include <ipmid-host/cmd.hpp>
 #include <ipmid/api.hpp>
+#include <phosphor-logging/elog-errors.hpp>
+#include <phosphor-logging/elog.hpp>
+#include <phosphor-logging/log.hpp>
 
 void register_netfn_app_functions() __attribute__((constructor));
 
@@ -135,6 +138,7 @@ std::unique_ptr<sdbusplus::server::manager_t> objManager
 
 void register_netfn_app_functions()
 {
+    phosphor::logging::log<phosphor::logging::level::INFO>("register_netfn_app_functions in systemintfcmds enter");
 
     // <Read Event Message Buffer>
     ipmi_register_callback(NETFUN_APP, IPMI_CMD_READ_EVENT, NULL,

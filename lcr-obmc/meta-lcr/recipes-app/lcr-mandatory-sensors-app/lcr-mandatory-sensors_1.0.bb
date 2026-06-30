@@ -4,8 +4,22 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 
 SRC_URI = "file://src/main.cpp \
            file://src/utils.cpp \
-           file://src/mandatorySensors.cpp \
-           file://include/mandatorySensors.hpp \
+           file://src/FRUHealthState.cpp \
+           file://include/FRUHealthState.hpp \
+           file://src/FRUStateSensor.cpp \
+           file://include/FRUStateSensor.hpp \
+           file://src/FRUTemperatureSensor.cpp \
+           file://include/FRUTemperatureSensor.hpp \
+           file://src/FRUVoltageSensor.cpp \
+           file://include/FRUVoltageSensor.hpp \
+           file://src/IPMBLinkSensor.cpp \
+           file://include/IPMBLinkSensor.hpp \
+           file://src/PayloadModeSensor.cpp \
+           file://include/PayloadModeSensor.hpp \
+           file://src/PayloadTestResults.cpp \
+           file://include/PayloadTestResults.hpp \
+           file://src/PayloadTestStatus.cpp \
+           file://include/PayloadTestStatus.hpp \
            file://include/global.hpp \
            file://LCR_Mandatory_Sensors.service"
 
@@ -13,7 +27,7 @@ S = "${WORKDIR}"
 
 inherit pkgconfig systemd
 
-DEPENDS += "sdbusplus phosphor-dbus-interfaces systemd phosphor-logging fmt nlohmann-json"
+DEPENDS += "sdbusplus phosphor-dbus-interfaces systemd phosphor-logging fmt nlohmann-json boost"
 
 do_compile() {
     ${CXX} ${CXXFLAGS} -std=c++20 ${LDFLAGS} \
@@ -24,7 +38,14 @@ do_compile() {
     `${STAGING_BINDIR_NATIVE}/pkg-config --cflags nlohmann-json` \
     ${WORKDIR}/src/main.cpp \
     ${WORKDIR}/src/utils.cpp \
-    ${WORKDIR}/src/mandatorySensors.cpp \
+    ${WORKDIR}/src/FRUHealthState.cpp \
+    ${WORKDIR}/src/FRUStateSensor.cpp \
+    ${WORKDIR}/src/FRUTemperatureSensor.cpp \
+    ${WORKDIR}/src/FRUVoltageSensor.cpp \
+    ${WORKDIR}/src/IPMBLinkSensor.cpp \
+    ${WORKDIR}/src/PayloadModeSensor.cpp \
+    ${WORKDIR}/src/PayloadTestResults.cpp \
+    ${WORKDIR}/src/PayloadTestStatus.cpp \
     -I ${WORKDIR}/include \
     `${STAGING_BINDIR_NATIVE}/pkg-config --libs sdbusplus` \
     `${STAGING_BINDIR_NATIVE}/pkg-config --libs phosphor-dbus-interfaces phosphor-logging` \

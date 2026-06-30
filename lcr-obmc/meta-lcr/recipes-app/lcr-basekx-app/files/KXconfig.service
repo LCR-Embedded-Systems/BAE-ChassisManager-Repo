@@ -1,0 +1,10 @@
+[Unit]
+Description=Configuration of Base KX interface
+After=network.target xyz.openbmc_project.Network.service
+
+[Service]
+ExecStart=/usr/bin/configurekx.sh
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

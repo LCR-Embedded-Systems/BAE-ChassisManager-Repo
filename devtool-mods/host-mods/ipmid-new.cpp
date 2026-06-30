@@ -237,6 +237,7 @@ message::Response::ptr executeIpmiCommandCommon(
     std::unordered_map<unsigned int, HandlerTuple>& handlers,
     unsigned int keyCommon, message::Request::ptr request)
 {
+    // log<level::INFO>("executeIpmiCommandCommon enter");
     // filter the command first; a non-null message::Response::ptr
     // means that the message has been rejected for some reason
     message::Response::ptr filterResponse = filterIpmiCommand(request);
@@ -244,8 +245,10 @@ message::Response::ptr executeIpmiCommandCommon(
     Cmd cmd = request->ctx->cmd;
     unsigned int key = makeCmdKey(keyCommon, cmd);
     auto cmdIter = handlers.find(key);
+    // log<level::INFO>(("executeIpmiCommandCommon key " + std::to_string(key)).c_str());
     if (cmdIter != handlers.end())
     {
+        // log<level::INFO>("executeIpmiCommandCommon cmdIter in handlers");
         // only return the filter response if the command is found
         if (filterResponse)
         {
@@ -260,6 +263,7 @@ message::Response::ptr executeIpmiCommandCommon(
     }
     else
     {
+        // log<level::INFO>("executeIpmiCommandCommon cmdIter not in handlers");
         unsigned int wildcard = makeCmdKey(keyCommon, cmdWildcard);
         cmdIter = handlers.find(wildcard);
         if (cmdIter != handlers.end())
@@ -277,6 +281,7 @@ message::Response::ptr executeIpmiCommandCommon(
             return std::get<HandlerBase::ptr>(chosen)->call(request);
         }
     }
+    // log<level::INFO>("executeIpmiCommandCommon invalid command found");
     return errorResponse(request, ccInvalidCommand);
 }
 
@@ -877,7 +882,7 @@ int main(int argc, char* argv[])
             sdbusplus::bus::match::rules::arg0namespace(
                 ipmi::ipmiDbusChannelMatch),
         ipmi::nameChangeHandler);
-    ipmi::doListNames(*io, *sdbusp);
+    
 
     int exitCode = 0;
     // set up boost::asio signal handling
@@ -900,6 +905,8 @@ int main(int argc, char* argv[])
     iface->register_method("execute", ipmi::executionEntry);
     iface->initialize();
     init_vita4611();
+
+    ipmi::doListNames(*io, *sdbusp);
 
     io->run();
 

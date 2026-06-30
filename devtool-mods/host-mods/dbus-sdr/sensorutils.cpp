@@ -15,7 +15,7 @@
 */
 
 #include "dbus-sdr/sensorutils.hpp"
-
+#include <phosphor-logging/log.hpp>
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -46,6 +46,7 @@ static bool baseInRange(double base)
 // Returns true if successful, modifies values in-place
 static bool scaleFloatExp(double& base, int8_t& expShift)
 {
+    // phosphor::logging::log<phosphor::logging::level::INFO>("scaleFloatExp: enter");
     // Comparing with zero should be OK, zero is special in floating-point
     // If base is exactly zero, no adjustment of the exponent is necessary
     if (base == 0.0)
@@ -85,6 +86,7 @@ static bool scaleFloatExp(double& base, int8_t& expShift)
 
     // If the above loop was not able to pull it back within range,
     // the base value is beyond what expShift can represent, return false.
+    // phosphor::logging::log<phosphor::logging::level::INFO>("scaleFloatExp: exit");
     return baseInRange(base);
 }
 
@@ -151,13 +153,17 @@ bool getSensorAttributes(const double max, const double min, int16_t& mValue,
                          int8_t& rExp, int16_t& bValue, int8_t& bExp,
                          bool& bSigned)
 {
+    // phosphor::logging::log<phosphor::logging::level::INFO>("getSensorAttributes: enter");
+    // phosphor::logging::log<phosphor::logging::level::INFO>(("getSensorAttributes: max value: " + std::to_string(max) + " and min value: " + std::to_string(min)).c_str());
     if (!(std::isfinite(min)))
     {
+        // phosphor::logging::log<phosphor::logging::level::INFO>("getSensorAttributes: Min value is unusable");
         std::cerr << "getSensorAttributes: Min value is unusable\n";
         return false;
     }
     if (!(std::isfinite(max)))
     {
+        // phosphor::logging::log<phosphor::logging::level::INFO>("getSensorAttributes: Max value is unusable");
         std::cerr << "getSensorAttributes: Max value is unusable\n";
         return false;
     }
@@ -165,6 +171,7 @@ bool getSensorAttributes(const double max, const double min, int16_t& mValue,
     // Because NAN has already been tested for, this comparison works
     if (max <= min)
     {
+        // phosphor::logging::log<phosphor::logging::level::INFO>("getSensorAttributes: Max must be greater than min");
         std::cerr << "getSensorAttributes: Max must be greater than min\n";
         return false;
     }
@@ -205,11 +212,13 @@ bool getSensorAttributes(const double max, const double min, int16_t& mValue,
     // Step 1: Set y to (max - min), set x to 255, set B to 0, solve for M
     // This works, regardless of signed or unsigned,
     // because total range is the same.
+    // phosphor::logging::log<phosphor::logging::level::INFO>("getSensorAttributes: getting dM");
     double dM = fullRange / 255.0;
 
     // Step 2: Constrain M, and set rExp accordingly
     if (!(scaleFloatExp(dM, rExp)))
     {
+        phosphor::logging::log<phosphor::logging::level::INFO>(("getSensorAttributes: Multiplier range exceeds scale (M=" + std::to_string(dM) + ", rExp=" + std::to_string((int)rExp)).c_str());
         std::cerr << "getSensorAttributes: Multiplier range exceeds scale (M="
                   << dM << ", rExp=" << (int)rExp << ")\n";
         return false;
@@ -222,6 +231,7 @@ bool getSensorAttributes(const double max, const double min, int16_t& mValue,
     // The multiplier can not be zero, for obvious reasons
     if (mValue == 0)
     {
+        phosphor::logging::log<phosphor::logging::level::INFO>("getSensorAttributes: Multiplier range below scale");
         std::cerr << "getSensorAttributes: Multiplier range below scale\n";
         return false;
     }
@@ -234,12 +244,15 @@ bool getSensorAttributes(const double max, const double min, int16_t& mValue,
     // B = 10^(-rExp - bExp) (y - M 10^rExp x)
     // TODO(): Compare with this alternative solution from SageMathCell
     // https://sagecell.sagemath.org/?z=eJyrtC1LLNJQr1TX5KqAMCuATF8I0xfIdIIwnYDMIteKAggPxAIKJMEFkiACxfk5Zaka0ZUKtrYKGhq-CloKFZoK2goaTkCWhqGBgpaWAkilpqYmQgBklmasjoKTJgDAECTH&lang=sage&interacts=eJyLjgUAARUAuQ==
+    // phosphor::logging::log<phosphor::logging::level::INFO>("getSensorAttributes: getting dB");
     double dB = std::pow(10.0, ((-rExp) - bExp)) *
                 (min - ((dM * std::pow(10.0, rExp) * lowestX)));
 
     // Step 4: Constrain B, and set bExp accordingly
     if (!(scaleFloatExp(dB, bExp)))
     {
+        phosphor::logging::log<phosphor::logging::level::INFO>(("getSensorAttributes: Offset (B=" + std::to_string(dB) + ", bExp=" + std::to_string((int)bExp) + \
+         ") exceeds multiplier scale (M=" + std::to_string(dM) + ", rExp=" + std::to_string((int)rExp)).c_str());
         std::cerr << "getSensorAttributes: Offset (B=" << dB
                   << ", bExp=" << (int)bExp
                   << ") exceeds multiplier scale (M=" << dM
@@ -252,6 +265,7 @@ bool getSensorAttributes(const double max, const double min, int16_t& mValue,
     normalizeIntExp(bValue, bExp, dB);
 
     // Unlike the multiplier, it is perfectly OK for bValue to be zero
+    // phosphor::logging::log<phosphor::logging::level::INFO>("getSensorAttributes: successful, exiting");
     return true;
 }
 

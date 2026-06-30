@@ -109,7 +109,6 @@ FILES:${PN}-presence-tach = "${bindir}/phosphor-fan-presence-tach"
 FILES:${PN}-presence-tach += "${@bb.utils.contains('PACKAGECONFIG', 'json', \
     '${datadir}/phosphor-fan-presence/presence/*', '', d)}"
 FILES:${PN}-control = "${bindir}/phosphor-fan-control"
-FILES:${PN}-control += "${bindir}/fanctl"
 # Package the JSON config files installed from the repo
 FILES:${PN}-control += "${@bb.utils.contains('PACKAGECONFIG', 'json', \
     '${datadir}/phosphor-fan-presence/control/*', '', d)}"

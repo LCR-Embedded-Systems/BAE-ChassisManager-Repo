@@ -3,17 +3,21 @@
 
 int main()
 {
-    //std::string directory = "hwmon2";
-    std::vector<Temp_Sensor> sensors_C;
-    Temp_Sensor instanceTemp;
+
+    boost::asio::io_context io;
+    auto bus = std::make_shared<sdbusplus::asio::connection>(io);
+
+    bus->request_name("xyz.openbmc_project.temperatureHwmon");
+
+    sdbusplus::asio::object_server obj_server(bus);
+
+    Temp_Sensor instanceTemp(bus, obj_server);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-    while (true) {
-        instanceTemp.update_reading();
-        instanceTemp.send_all_readings();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
+    instanceTemp.schedule_update();
+
+    io.run();
 
     return 0;
 }
